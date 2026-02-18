@@ -2,6 +2,7 @@
 #include <SDL3/SDL.h>
 #include <string>
 #include <vector>
+#include "Logger.h"
 
 namespace SDLHelper {
 
@@ -10,10 +11,10 @@ namespace SDLHelper {
         SDL_GetWindowSize(window, &windowW, &windowH);
         float density = SDL_GetWindowPixelDensity(window);
         *scale = density;
-        SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "SDL Window size: %d x %d, density: %.2f", windowW, windowH, density);
+        SDL_LogDebug(MY_LOG_SDL, "SDL Window size: %d x %d, density: %.2f", windowW, windowH, density);
 
         SDL_GetWindowSizeInPixels(window, renderW, renderH);
-        SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Physical pixels: %d x %d", *renderW, *renderH);
+        SDL_LogDebug(MY_LOG_SDL, "Physical pixels: %d x %d", *renderW, *renderH);
     }
 
     bool IsIOS() {

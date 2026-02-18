@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 4.0) # 3.24+ is best for FetchContent
 project(3d_renderer LANGUAGES CXX)
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 function(link_sdl3_xc target_name)
     find_library(SDL3_FRAMEWORK
             NAMES SDL3
@@ -18,5 +21,5 @@ function(link_sdl3_xc target_name)
     )
 endfunction()
 
-add_executable(3d_renderer src/Main.cpp)
+add_executable(3d_renderer src/Main.cpp src/Display.cpp)
 link_sdl3_xc(3d_renderer)
