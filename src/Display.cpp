@@ -2,7 +2,7 @@
 #include "SDLHelper.h"
 
 
-bool is_running = false;
+
 SDL_Window* window = nullptr;
 SDL_Renderer* renderer = nullptr;
 uint32_t* color_buffer = nullptr;
@@ -44,15 +44,18 @@ void draw_grid() {
     }
 }
 
-void draw_rect(int x, int y, int width, int height, uint32_t color) {
-    x = std::clamp(x, 0, window_width);
-    y = std::clamp(y, y, window_height);
-    int to_x = std::clamp(x + width, 0, window_width);
-    int to_y = std::clamp(y + height, 0, window_height);
+void draw_pixel(int x, int y, uint32_t color) {
+    if (x >=0 && x < window_width && y>=0 &&  y < window_height) {
+        color_buffer[y * window_width + x] = color;
+    }
+}
 
-    for (int r = y; r < to_y; r++) {
-        for (int c = x; c < to_x; c++) {
-            color_buffer[r * window_width + c] = color;
+void draw_rect(int x, int y, int width, int height, uint32_t color) {
+    for (int i =0 ; i < width; i++) {
+        for (int j =0 ;j < height;j++) {
+            int current_x = x + i;
+            int current_y = y + j;
+            draw_pixel(current_x, current_y, color);
         }
     }
 
