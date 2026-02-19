@@ -21,5 +21,5 @@ function(link_sdl3_xc target_name)
     )
 endfunction()
 
-add_executable(3d_renderer src/Main.cpp src/Display.cpp)
+add_executable(3d_renderer src/Main.cpp src/Display.cpp src/Vector.cpp)
 link_sdl3_xc(3d_renderer)
