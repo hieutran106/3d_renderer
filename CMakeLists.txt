@@ -21,6 +21,16 @@ function(link_sdl3_xc target_name)
     )
 endfunction()
 
-add_executable(3d_renderer src/Main.cpp src/Display.cpp src/Vector.cpp
-        src/Mesh.cpp)
+function(get_cpp_sources target_name result)
+    file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/src/*.cpp")
+    set(${result} ${SOURCES} PARENT_SCOPE)
+    # debug
+    message(STATUS "get_cpp_sources:")
+    foreach (src IN LISTS SOURCES)
+        message(STATUS "    ${src}")
+    endforeach ()
+endfunction()
+
+get_cpp_sources(3d_renderer SOURCES)
+add_executable(3d_renderer ${SOURCES})
 link_sdl3_xc(3d_renderer)
