@@ -1,3 +1,4 @@
+#include "Array.h"
 #include "Display.h"
 #include "Logger.h"
 #include "Mesh.h"
@@ -5,12 +6,12 @@
 #include <stdlib.h>
 
 
-triangle_t triangles_to_render[N_MESH_FACES];
+triangle_t* triangles_to_render = nullptr;
 
 vec3_t camera_position = {0, 0, -5};
 
-vec3_t cube_rotation = {0, 0, 0};
-bool is_running      = false;
+
+bool is_running = false;
 
 float fov_factor = 640;
 
@@ -20,6 +21,8 @@ void setup() {
     color_buffer = new uint32_t[window_width * window_height];
     color_buffer_texture =
         SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
+
+    load_cube_mesh_data();
 }
 
 void process_input() {
@@ -52,26 +55,29 @@ void update() {
 
     previous_frame_time = SDL_GetTicks();
 
-    cube_rotation.x += 0.01;
-    cube_rotation.y += 0.01;
-    cube_rotation.z += 0.01;
+    // Initialize the array to triangles to render
+    triangles_to_render = nullptr;
 
-    for (int i = 0; i < N_MESH_FACES; i++) {
-        face_t mesh_face = mesh_faces[i];
+    mesh.rotation.x += 0.01;
+    mesh.rotation.y += 0.01;
+    mesh.rotation.z += 0.01;
+
+    int num_faces = array_length(mesh.faces);
+    for (int i = 0; i < num_faces; i++) {
+        face_t mesh_face = mesh.faces[i];
+
         vec3_t face_vertices[3];
-
-
-        face_vertices[0] = mesh_vertices[mesh_face.a - 1];
-        face_vertices[1] = mesh_vertices[mesh_face.b - 1];
-        face_vertices[2] = mesh_vertices[mesh_face.c - 1];
+        face_vertices[0] = mesh.vertices[mesh_face.a - 1];
+        face_vertices[1] = mesh.vertices[mesh_face.b - 1];
+        face_vertices[2] = mesh.vertices[mesh_face.c - 1];
 
         triangle_t projected_triangle;
         // Loop all three vertices of this current face and apply transformation
         for (int j = 0; j < 3; j++) {
             vec3_t transformed_vertex = face_vertices[j];
-            transformed_vertex        = vec3_rotate_x(transformed_vertex, cube_rotation.x);
-            transformed_vertex        = vec3_rotate_y(transformed_vertex, cube_rotation.y);
-            transformed_vertex        = vec3_rotate_z(transformed_vertex, cube_rotation.z);
+            transformed_vertex        = vec3_rotate_x(transformed_vertex, mesh.rotation.x);
+            transformed_vertex        = vec3_rotate_y(transformed_vertex, mesh.rotation.y);
+            transformed_vertex        = vec3_rotate_z(transformed_vertex, mesh.rotation.z);
 
             transformed_vertex.z -= camera_position.z;
             // Project the current point
@@ -82,13 +88,16 @@ void update() {
 
             projected_triangle.points[j] = projected_point;
         }
-        triangles_to_render[i] = projected_triangle;
+        // Save the projected triangle in the array of triangles to render
+        array_push(triangles_to_render, projected_triangle);
     }
 }
 void render() {
     clear_color_buffer(0xFF000000);
     draw_grid();
-    for (int i = 0; i < N_MESH_FACES; i++) {
+
+    int num_faces = array_length(mesh.faces);
+    for (int i = 0; i < num_faces; i++) {
         const triangle_t& triangle = triangles_to_render[i];
         draw_rect(triangle.points[0].x, triangle.points[0].y, 3, 3, 0xFFFFFF00);
         draw_rect(triangle.points[1].x, triangle.points[1].y, 3, 3, 0xFFFFFF00);
@@ -99,12 +108,24 @@ void render() {
             triangle.points[2].x, triangle.points[2].y, 0xFF00FF00);
     }
 
-
+    // Clear the array of triangles to render every frame loop
+    array_free(triangles_to_render);
     render_color_buffer();
     SDL_RenderPresent(renderer);
 }
 
+void free_resource() {
+    free(color_buffer);
+    array_free(mesh.faces);
+    array_free(mesh.vertices);
+}
+
 int main(int argc, char* argv[]) {
+    // Test
+    int x         = 5;
+    auto z        = 10.5;
+    decltype(x) y = 10.5;
+    // End test
     SDL_SetLogPriority(MY_LOG_SDL, SDL_LOG_PRIORITY_DEBUG);
     is_running = initialize_window();
     setup();
@@ -115,5 +136,6 @@ int main(int argc, char* argv[]) {
         render();
     }
     destroy_window();
+    free_resource();
     return 0;
 }
