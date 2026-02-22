@@ -52,9 +52,9 @@ void update() {
 
     previous_frame_time = SDL_GetTicks();
 
-    cube_rotation.x += 0.005;
-    cube_rotation.y += 0.005;
-    cube_rotation.z += 0.005;
+    cube_rotation.x += 0.01;
+    cube_rotation.y += 0.01;
+    cube_rotation.z += 0.01;
 
     for (int i = 0; i < N_MESH_FACES; i++) {
         face_t mesh_face = mesh_faces[i];
@@ -89,13 +89,17 @@ void render() {
     clear_color_buffer(0xFF000000);
     draw_grid();
     for (int i = 0; i < N_MESH_FACES; i++) {
-        auto triangle = triangles_to_render[i];
-        // Draw each vertex
-        for (int j = 0; j < 3; j++) {
-            const vec2_t& vertex = triangle.points[j];
-            draw_rect(vertex.x, vertex.y, 4, 4, 0xFFFFFF00);
-        }
+        const triangle_t& triangle = triangles_to_render[i];
+        draw_rect(triangle.points[0].x, triangle.points[0].y, 3, 3, 0xFFFFFF00);
+        draw_rect(triangle.points[1].x, triangle.points[1].y, 3, 3, 0xFFFFFF00);
+        draw_rect(triangle.points[2].x, triangle.points[2].y, 3, 3, 0xFFFFFF00);
+
+        // Draw unfilled triangle
+        draw_triangle(triangle.points[0].x, triangle.points[0].y, triangle.points[1].x, triangle.points[1].y,
+            triangle.points[2].x, triangle.points[2].y, 0xFF00FF00);
     }
+
+
     render_color_buffer();
     SDL_RenderPresent(renderer);
 }
