@@ -40,3 +40,5 @@ void load_cube_mesh_data() {
         array_push(mesh.faces, cube_face);
     }
 }
+
+void load_obj_file_data(const char* filename) {}
