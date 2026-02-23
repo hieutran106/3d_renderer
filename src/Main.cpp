@@ -23,7 +23,7 @@ void setup() {
         SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
 
     // load_cube_mesh_data();
-    load_obj_file_data("test");
+    load_obj_file_data("../assets/cube.obj");
 }
 
 void process_input() {
@@ -127,7 +127,7 @@ int main(int argc, char* argv[]) {
     auto z        = 10.5;
     decltype(x) y = 10.5;
     // End test
-    SDL_SetLogPriority(MY_LOG_SDL, SDL_LOG_PRIORITY_DEBUG);
+    SDL_SetLogPriority(MY_LOG_OBJ, SDL_LOG_PRIORITY_DEBUG);
     is_running = initialize_window();
     setup();
 
