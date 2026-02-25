@@ -23,7 +23,7 @@ void setup() {
         SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
 
     // load_cube_mesh_data();
-    load_obj_file_data("../assets/cube.obj");
+    load_obj_file_data("../assets/f22.obj");
 }
 
 void process_input() {
@@ -60,8 +60,8 @@ void update() {
     triangles_to_render = nullptr;
 
     mesh.rotation.x += 0.01;
-    mesh.rotation.y += 0.01;
-    mesh.rotation.z += 0.01;
+    mesh.rotation.y += 0.00;
+    mesh.rotation.z += 0.00;
 
     int num_faces = array_length(mesh.faces);
     for (int i = 0; i < num_faces; i++) {
@@ -95,7 +95,7 @@ void update() {
 }
 void render() {
     clear_color_buffer(0xFF000000);
-    draw_grid();
+    // draw_grid();
 
     int num_faces = array_length(mesh.faces);
     for (int i = 0; i < num_faces; i++) {
