@@ -8,7 +8,7 @@
 
 triangle_t* triangles_to_render = nullptr;
 
-vec3_t camera_position = {0, 0, -5};
+vec3_t camera_position = {0, 0, 0};
 
 
 bool is_running = false;
@@ -72,17 +72,39 @@ void update() {
         face_vertices[1] = mesh.vertices[mesh_face.b - 1];
         face_vertices[2] = mesh.vertices[mesh_face.c - 1];
 
-        triangle_t projected_triangle;
+        vec3_t transformed_vertices[3];
         // Loop all three vertices of this current face and apply transformation
         for (int j = 0; j < 3; j++) {
-            vec3_t transformed_vertex = face_vertices[j];
-            transformed_vertex        = vec3_rotate_x(transformed_vertex, mesh.rotation.x);
-            transformed_vertex        = vec3_rotate_y(transformed_vertex, mesh.rotation.y);
-            transformed_vertex        = vec3_rotate_z(transformed_vertex, mesh.rotation.z);
+            transformed_vertices[j] = face_vertices[j];
+            transformed_vertices[j] = vec3_rotate_x(transformed_vertices[j], mesh.rotation.x);
+            transformed_vertices[j] = vec3_rotate_y(transformed_vertices[j], mesh.rotation.y);
+            transformed_vertices[j] = vec3_rotate_z(transformed_vertices[j], mesh.rotation.z);
 
-            transformed_vertex.z -= camera_position.z;
+            transformed_vertices[j].z += 5;
+        }
+
+        // Check backface culling
+        vec3_t vector_a = transformed_vertices[0];
+        vec3_t vector_b = transformed_vertices[1];
+        vec3_t vector_c = transformed_vertices[2];
+
+        auto vector_ab     = vec3_sub(vector_b, vector_a);
+        auto vector_ac     = vec3_sub(vector_c, vector_a);
+        auto vector_normal = vec3_cross(vector_ab, vector_ac);
+        // Find the vector between a point in the triangle and the camera origin
+        auto camera_ray = vec3_sub(camera_position, vector_a);
+
+        // Calculate how aligned the camera ray is with the face normal (Using dot product)
+        auto culling = vec3_dot(vector_normal, camera_ray);
+        if (culling < 0) {
+            continue;
+        }
+
+        // Loop all three vertices to perform projection
+        triangle_t projected_triangle;
+        for (int j = 0; j < 3; j++) {
             // Project the current point
-            vec2_t projected_point = project(transformed_vertex);
+            vec2_t projected_point = project(transformed_vertices[j]);
             // Scale and translate the projected points to the middle of the screen
             projected_point.x += window_width / 2;
             projected_point.y += window_height / 2;
@@ -95,9 +117,9 @@ void update() {
 }
 void render() {
     clear_color_buffer(0xFF000000);
-    // draw_grid();
+    draw_grid();
 
-    int num_faces = array_length(mesh.faces);
+    int num_faces = array_length(triangles_to_render);
     for (int i = 0; i < num_faces; i++) {
         const triangle_t& triangle = triangles_to_render[i];
         draw_rect(triangle.points[0].x, triangle.points[0].y, 3, 3, 0xFFFFFF00);
