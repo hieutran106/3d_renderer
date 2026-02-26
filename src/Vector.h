@@ -9,6 +9,10 @@ struct vec3_t {
     float x;
     float y;
     float z;
+
+    vec3_t operator-(const vec3_t& other) const {
+        return {.x = x - other.x, .y = y - other.y, .z = z - other.z};
+    }
 };
 // Vector 2D functions
 float vec2_length(vec2_t v);

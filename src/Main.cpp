@@ -88,14 +88,14 @@ void update() {
         vec3_t vector_b = transformed_vertices[1];
         vec3_t vector_c = transformed_vertices[2];
 
-        auto vector_ab = vec3_sub(vector_b, vector_a);
-        auto vector_ac = vec3_sub(vector_c, vector_a);
+        auto vector_ab = vector_b - vector_a;
+        auto vector_ac = vector_c - vector_a;
         vec3_t normal  = vec3_cross(vector_ab, vector_ac);
 
         // Normalize the face normal vector - in-place update
         vec3_normalize(&normal);
         // Find the vector between a point in the triangle and the camera origin
-        auto camera_ray = vec3_sub(camera_position, vector_a);
+        auto camera_ray = camera_position - vector_a;
 
         // Calculate how aligned the camera ray is with the face normal (Using dot product)
         auto culling = vec3_dot(normal, camera_ray);
@@ -103,7 +103,7 @@ void update() {
             continue;
         }
 
-        // Loop all three vertices to perform projection
+        // Loop all three vertices to perform a projection
         triangle_t projected_triangle;
         for (int j = 0; j < 3; j++) {
             // Project the current point
@@ -121,19 +121,21 @@ void update() {
 void render() {
     clear_color_buffer(0xFF000000);
     draw_grid();
+    // Loop all projected triangles and render them
+    // int num_faces = array_length(triangles_to_render);
+    // for (int i = 0; i < num_faces; i++) {
+    //     const triangle_t& triangle = triangles_to_render[i];
+    //     draw_rect(triangle.points[0].x, triangle.points[0].y, 3, 3, 0xFFFFFF00);
+    //     draw_rect(triangle.points[1].x, triangle.points[1].y, 3, 3, 0xFFFFFF00);
+    //     draw_rect(triangle.points[2].x, triangle.points[2].y, 3, 3, 0xFFFFFF00);
+    //
+    //     // Draw unfilled triangle
+    //     draw_triangle(triangle.points[0].x, triangle.points[0].y, triangle.points[1].x, triangle.points[1].y,
+    //         triangle.points[2].x, triangle.points[2].y, 0xFF00FF00);
+    // }
 
-    int num_faces = array_length(triangles_to_render);
-    for (int i = 0; i < num_faces; i++) {
-        const triangle_t& triangle = triangles_to_render[i];
-        draw_rect(triangle.points[0].x, triangle.points[0].y, 3, 3, 0xFFFFFF00);
-        draw_rect(triangle.points[1].x, triangle.points[1].y, 3, 3, 0xFFFFFF00);
-        draw_rect(triangle.points[2].x, triangle.points[2].y, 3, 3, 0xFFFFFF00);
-
-        // Draw unfilled triangle
-        draw_triangle(triangle.points[0].x, triangle.points[0].y, triangle.points[1].x, triangle.points[1].y,
-            triangle.points[2].x, triangle.points[2].y, 0xFF00FF00);
-    }
-
+    draw_triangle(300, 100, 50, 400, 500, 700, 0xFF00FF00);
+    draw_filled_triangle(300, 100, 50, 400, 500, 700, 0xFF00FF00);
     // Clear the array of triangles to render every frame loop
     array_free(triangles_to_render);
     render_color_buffer();

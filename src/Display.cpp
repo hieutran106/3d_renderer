@@ -9,8 +9,8 @@ uint32_t* color_buffer            = nullptr;
 SDL_Texture* color_buffer_texture = nullptr;
 
 // Logical size
-int window_width  = 800;
-int window_height = 600;
+int window_width  = 1024;
+int window_height = 768;
 // Physical pixels
 int renderW = 0;
 int renderH = 0;
