@@ -88,14 +88,17 @@ void update() {
         vec3_t vector_b = transformed_vertices[1];
         vec3_t vector_c = transformed_vertices[2];
 
-        auto vector_ab     = vec3_sub(vector_b, vector_a);
-        auto vector_ac     = vec3_sub(vector_c, vector_a);
-        auto vector_normal = vec3_cross(vector_ab, vector_ac);
+        auto vector_ab = vec3_sub(vector_b, vector_a);
+        auto vector_ac = vec3_sub(vector_c, vector_a);
+        vec3_t normal  = vec3_cross(vector_ab, vector_ac);
+
+        // Normalize the face normal vector - in-place update
+        vec3_normalize(&normal);
         // Find the vector between a point in the triangle and the camera origin
         auto camera_ray = vec3_sub(camera_position, vector_a);
 
         // Calculate how aligned the camera ray is with the face normal (Using dot product)
-        auto culling = vec3_dot(vector_normal, camera_ray);
+        auto culling = vec3_dot(normal, camera_ray);
         if (culling < 0) {
             continue;
         }

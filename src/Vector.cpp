@@ -17,6 +17,11 @@ vec2_t vec2_mul(vec2_t v, float factor) {
 vec2_t vec2_div(vec2_t v, float factor) {
     return {.x = v.x / factor, .y = v.y / factor};
 }
+void vec2_normalize(vec2_t* v) {
+    const float len = vec2_length(*v);
+    v->x            = v->x / len;
+    v->y            = v->y / len;
+}
 
 ////////////////////////////////////////////////
 // Implementations of Vector 3D functions
@@ -42,6 +47,12 @@ vec3_t vec3_cross(vec3_t a, vec3_t b) {
 }
 float vec3_dot(vec3_t a, vec3_t b) {
     return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+void vec3_normalize(vec3_t* v) {
+    const float len = vec3_length(*v);
+    v->x            = v->x / len;
+    v->y            = v->y / len;
+    v->z            = v->z / len;
 }
 vec3_t vec3_rotate_x(vec3_t v, float angle) {
     using std::cos, std::sin;
