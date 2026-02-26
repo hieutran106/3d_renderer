@@ -4,6 +4,7 @@
 #include "Mesh.h"
 #include "Vector.h"
 #include <stdlib.h>
+#include <string>
 
 
 triangle_t* triangles_to_render = nullptr;
@@ -149,11 +150,6 @@ void free_resource() {
 }
 
 int main(int argc, char* argv[]) {
-    // Test
-    int x         = 5;
-    auto z        = 10.5;
-    decltype(x) y = 10.5;
-    // End test
     SDL_SetLogPriority(MY_LOG_OBJ, SDL_LOG_PRIORITY_DEBUG);
     is_running = initialize_window();
     setup();

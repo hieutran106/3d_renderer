@@ -49,16 +49,12 @@ void load_obj_file_data(const char* filename) {
     char line[1024];
 
     while (fgets(line, 1024, file)) {
-
         // Vertex information
         if (strncmp(line, "v ", 2) == 0) {
-            SDL_LogDebug(MY_LOG_OBJ, "Line=%s", line);
             vec3_t vertex;
             sscanf(line, "v %f %f %f", &vertex.x, &vertex.y, &vertex.z);
             array_push(mesh.vertices, vertex);
         } else if (strncmp(line, "f", 1) == 0) {
-            SDL_LogDebug(MY_LOG_OBJ, "Line=%s", line);
-
             int vertex_indices[3];
             int texture_indices[3];
             int normal_indices[3];
