@@ -150,6 +150,7 @@ void free_resource() {
 }
 
 int main(int argc, char* argv[]) {
+    SDL_SetLogPriorities(SDL_LOG_PRIORITY_DEBUG);
     SDL_SetLogPriority(MY_LOG_OBJ, SDL_LOG_PRIORITY_DEBUG);
     is_running = initialize_window();
     setup();
