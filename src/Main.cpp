@@ -25,7 +25,8 @@ void setup() {
     color_buffer_texture =
         SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
 
-    load_obj_file_data("../assets/cube.obj");
+    load_cube_mesh_data();
+    // load_obj_file_data("../assets/cube.obj");
 }
 
 void process_input() {
@@ -120,16 +121,23 @@ void update() {
         }
 
         // Loop all three vertices to perform a projection
-        triangle_t projected_triangle;
+        vec2_t projected_points[3];
         for (int j = 0; j < 3; j++) {
             // Project the current point
-            vec2_t projected_point = project(transformed_vertices[j]);
+            projected_points[j] = project(transformed_vertices[j]);
             // Scale and translate the projected points to the middle of the screen
-            projected_point.x += window_width / 2;
-            projected_point.y += window_height / 2;
-
-            projected_triangle.points[j] = projected_point;
+            projected_points[j].x += window_width / 2;
+            projected_points[j].y += window_height / 2;
         }
+
+
+        triangle_t projected_triangle = {.color = mesh_face.color,
+            .points                             = {
+                {projected_points[0].x, projected_points[0].y},
+                {projected_points[1].x, projected_points[1].y},
+                {projected_points[2].x, projected_points[2].y},
+
+            }};
         // Save the projected triangle in the array of triangles to render
         array_push(triangles_to_render, projected_triangle);
     }
@@ -147,7 +155,7 @@ void render() {
             draw_filled_triangle(triangle.points[0].x, triangle.points[0].y, // vertex A
                 triangle.points[1].x, triangle.points[1].y, // vertex B
                 triangle.points[2].x, triangle.points[2].y, // vertex C
-                0xFF555555);
+                triangle.color);
         }
         // Draw triangle frame
         if (render_method == RENDER_WIRE || render_method == RENDER_WIRE_VERTEX
