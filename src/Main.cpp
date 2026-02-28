@@ -6,11 +6,9 @@
 #include <stdlib.h>
 #include <string>
 
-
 triangle_t* triangles_to_render = nullptr;
 
 vec3_t camera_position = {0, 0, 0};
-
 
 bool is_running = false;
 
@@ -19,11 +17,14 @@ float fov_factor = 640;
 int previous_frame_time = 0;
 
 void setup() {
+    // Initialize render mode and triangle culling mode
+    render_method = RENDER_WIRE;
+    cull_method   = CULL_BACKFACE;
+
     color_buffer = new uint32_t[window_width * window_height];
     color_buffer_texture =
         SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
 
-    // load_cube_mesh_data();
     load_obj_file_data("../assets/cube.obj");
 }
 
@@ -37,6 +38,18 @@ void process_input() {
     case SDL_EVENT_KEY_DOWN:
         if (event.key.key == SDLK_ESCAPE) {
             is_running = false;
+        } else if (event.key.key == SDLK_1) {
+            render_method = RENDER_WIRE_VERTEX;
+        } else if (event.key.key == SDLK_2) {
+            render_method = RENDER_WIRE;
+        } else if (event.key.key == SDLK_3) {
+            render_method = RENDER_FILL_TRIANGLE;
+        } else if (event.key.key == SDLK_4) {
+            render_method = RENDER_FILL_TRIANGLE_WIRE;
+        } else if (event.key.key == SDLK_C) {
+            cull_method = CULL_BACKFACE;
+        } else if (event.key.key == SDLK_D) {
+            cull_method = CULL_NONE;
         }
         break;
     }
@@ -61,8 +74,8 @@ void update() {
     triangles_to_render = nullptr;
 
     mesh.rotation.x += 0.01;
-    mesh.rotation.y += 0.00;
-    mesh.rotation.z += 0.00;
+    mesh.rotation.y += 0.01;
+    mesh.rotation.z += 0.01;
 
     int num_faces = array_length(mesh.faces);
     for (int i = 0; i < num_faces; i++) {
@@ -84,24 +97,26 @@ void update() {
             transformed_vertices[j].z += 5;
         }
 
-        // Check backface culling
-        vec3_t vector_a = transformed_vertices[0];
-        vec3_t vector_b = transformed_vertices[1];
-        vec3_t vector_c = transformed_vertices[2];
+        // Check backface culling test to see if the current face should be projected
+        if (cull_method == CULL_BACKFACE) {
+            vec3_t vector_a = transformed_vertices[0];
+            vec3_t vector_b = transformed_vertices[1];
+            vec3_t vector_c = transformed_vertices[2];
 
-        auto vector_ab = vector_b - vector_a;
-        auto vector_ac = vector_c - vector_a;
-        vec3_t normal  = vec3_cross(vector_ab, vector_ac);
+            auto vector_ab = vector_b - vector_a;
+            auto vector_ac = vector_c - vector_a;
+            vec3_t normal  = vec3_cross(vector_ab, vector_ac);
 
-        // Normalize the face normal vector - in-place update
-        vec3_normalize(&normal);
-        // Find the vector between a point in the triangle and the camera origin
-        auto camera_ray = camera_position - vector_a;
+            // Normalize the face normal vector - in-place update
+            vec3_normalize(&normal);
+            // Find the vector between a point in the triangle and the camera origin
+            auto camera_ray = camera_position - vector_a;
 
-        // Calculate how aligned the camera ray is with the face normal (Using dot product)
-        auto culling = vec3_dot(normal, camera_ray);
-        if (culling < 0) {
-            continue;
+            // Calculate how aligned the camera ray is with the face normal (Using dot product)
+            auto culling = vec3_dot(normal, camera_ray);
+            if (culling < 0) {
+                continue;
+            }
         }
 
         // Loop all three vertices to perform a projection
@@ -128,15 +143,28 @@ void render() {
         const triangle_t& triangle = triangles_to_render[i];
 
         // Draw filled triangle
-        draw_filled_triangle(triangle.points[0].x, triangle.points[0].y, triangle.points[1].x, triangle.points[1].y,
-            triangle.points[2].x, triangle.points[2].y, 0xFFFFFFFF);
-
-        draw_triangle(triangle.points[0].x, triangle.points[0].y, triangle.points[1].x, triangle.points[1].y,
-            triangle.points[2].x, triangle.points[2].y, 0xFF000000);
+        if (render_method == RENDER_FILL_TRIANGLE || render_method == RENDER_FILL_TRIANGLE_WIRE) {
+            draw_filled_triangle(triangle.points[0].x, triangle.points[0].y, // vertex A
+                triangle.points[1].x, triangle.points[1].y, // vertex B
+                triangle.points[2].x, triangle.points[2].y, // vertex C
+                0xFF555555);
+        }
+        // Draw triangle frame
+        if (render_method == RENDER_WIRE || render_method == RENDER_WIRE_VERTEX
+            || render_method == RENDER_FILL_TRIANGLE_WIRE) {
+            draw_triangle(triangle.points[0].x, triangle.points[0].y, // vertex A
+                triangle.points[1].x, triangle.points[1].y, // vertex B
+                triangle.points[2].x, triangle.points[2].y, // vertex C
+                0xFFFFFFFF);
+        }
+        // Draw triangle vertex points
+        if (render_method == RENDER_WIRE_VERTEX) {
+            draw_rect(triangle.points[0].x - 3, triangle.points[0].y - 3, 6, 6, 0xFFFF0000); // vertex A
+            draw_rect(triangle.points[1].x - 3, triangle.points[1].y - 3, 6, 6, 0xFFFF0000); // vertex B
+            draw_rect(triangle.points[2].x - 3, triangle.points[2].y - 3, 6, 6, 0xFFFF0000); // vertex C
+        }
     }
 
-    // draw_triangle(300, 100, 50, 400, 500, 700, 0xFF00FF00);
-    // draw_filled_triangle(300, 100, 50, 400, 500, 700, 0xFF00FF00);
     // Clear the array of triangles to render every frame loop
     array_free(triangles_to_render);
     render_color_buffer();

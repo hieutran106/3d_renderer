@@ -2,6 +2,8 @@
 
 #include "SDLHelper.h"
 
+enum cull_method cull_method;
+enum render_method render_method;
 
 SDL_Window* window                = nullptr;
 SDL_Renderer* renderer            = nullptr;
