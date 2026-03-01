@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.0) # 3.24+ is best for FetchContent
+cmake_minimum_required(VERSION 3.24) # 3.24+ is best for FetchContent
 project(3d_renderer LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -12,6 +12,10 @@ function(link_sdl3_xc target_name)
     )
     if (NOT SDL3_FRAMEWORK)
         message(FATAL_ERROR "SDL3.xcframework not found!")
+    endif ()
+    if (APPLE)
+        # Remove Quarantine Attribute
+        execute_process(COMMAND xattr -r -d com.apple.quarantine "${SDL3_FRAMEWORK}" OUTPUT_QUIET ERROR_QUIET)
     endif ()
     message(STATUS ${SDL3_FRAMEWORK})
     target_link_libraries(${target_name} PRIVATE "${SDL3_FRAMEWORK}")
