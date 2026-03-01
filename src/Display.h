@@ -14,6 +14,7 @@ extern render_method render_method;
 
 
 extern bool is_running;
+extern bool is_paused;
 extern SDL_Window* window;
 extern SDL_Renderer* renderer;
 extern uint32_t* color_buffer;

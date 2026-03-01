@@ -11,6 +11,8 @@ triangle_t* triangles_to_render = nullptr;
 vec3_t camera_position = {0, 0, 0};
 
 bool is_running = false;
+bool is_paused  = false;
+
 
 float fov_factor = 640;
 
@@ -51,6 +53,8 @@ void process_input() {
             cull_method = CULL_BACKFACE;
         } else if (event.key.key == SDLK_D) {
             cull_method = CULL_NONE;
+        } else if (event.key.key == SDLK_P) {
+            is_paused = !is_paused;
         }
         break;
     }
@@ -69,9 +73,13 @@ void update() {
         SDL_Delay(time_to_wait);
     }
 
+    if (is_paused) {
+        return;
+    }
     previous_frame_time = SDL_GetTicks();
 
     // Initialize the array to triangles to render
+    array_free(triangles_to_render);
     triangles_to_render = nullptr;
 
     mesh.rotation.x += 0.01;
@@ -179,7 +187,7 @@ void render() {
     }
 
     // Clear the array of triangles to render every frame loop
-    array_free(triangles_to_render);
+    // array_free(triangles_to_render);
     render_color_buffer();
     SDL_RenderPresent(renderer);
 }
