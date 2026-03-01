@@ -153,7 +153,18 @@ void update() {
         // Save the projected triangle in the array of triangles to render
         array_push(triangles_to_render, projected_triangle);
     }
-    // Sort the faces to render based on the avg_depth
+    // Sort the faces to render based on the avg_depth in descending order
+    int num_triangles = array_length(triangles_to_render);
+    for (int i = 0; i < num_triangles - 1; i++) {
+        for (int j = i + 1; j < num_triangles; j++) {
+            if (triangles_to_render[i].avg_depth < triangles_to_render[j].avg_depth) {
+                // Swap the triangles positions in the array
+                triangle_t temp        = triangles_to_render[i];
+                triangles_to_render[i] = triangles_to_render[j];
+                triangles_to_render[j] = temp;
+            }
+        }
+    }
 }
 void render() {
     clear_color_buffer(0xFF000000);
