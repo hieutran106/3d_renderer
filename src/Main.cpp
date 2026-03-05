@@ -119,6 +119,13 @@ void update()
 	auto rotation_matrix_z = mat4_make_rotation_x(mesh.rotation.z);
 	auto translation_matrix = mat4_make_translation(mesh.translation.x, mesh.translation.y, mesh.translation.z);
 
+	// Create a World Matrix combining scale, rotation, and translation matrices
+	// Order matters: First scale, then rotate, then translate. [T]*[R]*[S]*v
+	mat4_t world_matrix = mat4_mul_mat4(rotation_matrix_z, scale_matrix);
+	world_matrix = mat4_mul_mat4(rotation_matrix_y, world_matrix);
+	world_matrix = mat4_mul_mat4(rotation_matrix_x, world_matrix);
+	world_matrix = mat4_mul_mat4(translation_matrix, world_matrix);
+
 	int num_faces = array_length(mesh.faces);
 	for(int i = 0; i < num_faces; i++)
 	{
@@ -133,16 +140,8 @@ void update()
 		// Loop all three vertices of this current face and apply transformation
 		for(int j = 0; j < 3; j++)
 		{
-			// Use a matrix to scale, rotate, and translate our original vertex
-			// Note: the order matters
 			vec4_t transformed_vertex = vec4_from_vec3(face_vertices[j]);
-			transformed_vertex = mat4_mul_vec4(scale_matrix, transformed_vertex);
-			transformed_vertex = mat4_mul_vec4(rotation_matrix_x, transformed_vertex);
-			transformed_vertex = mat4_mul_vec4(rotation_matrix_y, transformed_vertex);
-			transformed_vertex = mat4_mul_vec4(rotation_matrix_z, transformed_vertex);
-			transformed_vertex = mat4_mul_vec4(translation_matrix, transformed_vertex);
-
-			transformed_vertices[j] = transformed_vertex;
+			transformed_vertices[j] = mat4_mul_vec4(world_matrix, transformed_vertex);
 		}
 
 		// Check backface culling test to see if the current face should be projected
