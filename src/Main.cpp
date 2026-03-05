@@ -108,7 +108,7 @@ void update()
 	// mesh.rotation.z += 0.01;
 
 	mesh.scale.x += 0.002;
-	// mesh.scale.y += 0.001;
+	mesh.scale.y += 0.001;
 	mesh.translation.x += 0.01;
 	mesh.translation.z = 5;
 
@@ -121,10 +121,7 @@ void update()
 
 	// Create a World Matrix combining scale, rotation, and translation matrices
 	// Order matters: First scale, then rotate, then translate. [T]*[R]*[S]*v
-	mat4_t world_matrix = mat4_mul_mat4(rotation_matrix_z, scale_matrix);
-	world_matrix = mat4_mul_mat4(rotation_matrix_y, world_matrix);
-	world_matrix = mat4_mul_mat4(rotation_matrix_x, world_matrix);
-	world_matrix = mat4_mul_mat4(translation_matrix, world_matrix);
+	mat4_t world_matrix = translation_matrix * rotation_matrix_x * rotation_matrix_y * rotation_matrix_z * scale_matrix;
 
 	int num_faces = array_length(mesh.faces);
 	for(int i = 0; i < num_faces; i++)

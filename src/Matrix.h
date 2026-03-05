@@ -4,6 +4,19 @@
 struct mat4_t
 {
 	float m[4][4];
+
+	mat4_t operator*(const mat4_t & b) const
+	{
+		mat4_t result;
+		for(int i = 0; i < 4; i++)
+		{
+			for(int j = 0; j < 4; j++)
+			{
+				result.m[i][j] = m[i][0] * b.m[0][j] + m[i][1] * b.m[1][j] + m[i][2] * b.m[2][j] + m[i][3] * b.m[3][j];
+			}
+		}
+		return result;
+	}
 };
 
 mat4_t mat4_identity();
