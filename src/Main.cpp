@@ -3,6 +3,7 @@
 #include "Logger.h"
 #include "Matrix.h"
 #include "Mesh.h"
+#include "Profiler/ProfileTimer.h"
 #include "Vector.h"
 #include <stdlib.h>
 #include <string>
@@ -211,6 +212,7 @@ void update()
 }
 void render()
 {
+	ProfileTimer t("Render");
 	clear_color_buffer(0xFF000000);
 	draw_grid();
 	// Loop all projected triangles and render them
