@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <string>
 
+#include "Profiler/Profiler.h"
+
 triangle_t * triangles_to_render = nullptr;
 
 vec3_t camera_position = {0, 0, 0};
@@ -87,6 +89,7 @@ vec2_t project(vec3_t point)
 
 void update()
 {
+	PROFILE_FUNCTION();
 	int time_to_wait = FRAME_TARGET_TIME - (SDL_GetTicks() - previous_frame_time);
 	// time_to_wait <= FRAME_TARGET_TIME is mostly useless,
 	if(time_to_wait > 0 && time_to_wait <= FRAME_TARGET_TIME)
@@ -212,7 +215,7 @@ void update()
 }
 void render()
 {
-	ProfileTimer t("Render");
+	PROFILE_FUNCTION();
 	clear_color_buffer(0xFF000000);
 	draw_grid();
 	// Loop all projected triangles and render them
@@ -271,6 +274,7 @@ void free_resource()
 
 int main(int argc, char * argv[])
 {
+	PROFILE_FUNCTION();
 	SDL_SetLogPriorities(SDL_LOG_PRIORITY_DEBUG);
 	SDL_SetLogPriority(MY_LOG_OBJ, SDL_LOG_PRIORITY_DEBUG);
 	is_running = initialize_window();

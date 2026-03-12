@@ -1,7 +1,14 @@
 #pragma once
-#include "../../third_party/SDL3.xcframework/macos-arm64_x86_64/SDL3.framework/Headers/SDL_log.h"
 #include <fstream>
 #include <iosfwd>
+
+#define PROFILING 0
+#ifdef PROFILING
+#	define PROFILE_SCOPE(name) ProfileTimer timer##__LINE__(name)
+#	define PROFILE_FUNCTION() PROFILE_SCOPE(__func__)
+#else
+#	define PROFILE_SCOPE(name)
+#endif
 
 struct ProfileResult
 {
@@ -24,6 +31,11 @@ class Profiler
 		WriteHeader();
 	}
 
+	~Profiler()
+	{
+		WriteFooter();
+	}
+
 	void WriteHeader()
 	{
 		outputStream << "{\"otherData\": {}, \"traceEvents\":[";
@@ -42,7 +54,6 @@ public:
 
 	void WriteProfile(const ProfileResult & r)
 	{
-		SDL_Log("Name: %s Duration: %lld us", r.name.c_str(), r.end - r.start);
 		std::lock_guard<std::mutex> lockGuard(lock);
 		if(profileCount++ > 0)
 		{
@@ -51,7 +62,8 @@ public:
 		std::string name = r.name;
 		std::replace(name.begin(), name.end(), '"', '\'');
 
-		// outputStream << "\n{";
-		// outputStream << "\"cat\":\"function\",";
+		outputStream << std::format(
+			R"({{"cat":"function","name":"{}","ph":"X","ts":{},"dur":{},"pid":0,"tid":{}}})", r.name, r.start, r.end - r.start, r.threadId
+		);
 	}
 };
