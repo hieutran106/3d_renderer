@@ -4,11 +4,11 @@
 #include "Matrix.h"
 #include "Mesh.h"
 #include "Profiler/ProfileTimer.h"
+#include "Profiler/Profiler.h"
 #include "Vector.h"
+#include <numbers>
 #include <stdlib.h>
 #include <string>
-
-#include "Profiler/Profiler.h"
 
 triangle_t * triangles_to_render = nullptr;
 
@@ -17,7 +17,7 @@ vec3_t camera_position = {0, 0, 0};
 bool is_running = false;
 bool is_paused = false;
 
-float fov_factor = 640;
+mat4_t projection_matrix;
 
 int previous_frame_time = 0;
 
@@ -29,6 +29,14 @@ void setup()
 
 	color_buffer = new uint32_t[window_width * window_height];
 	color_buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
+
+	// Initialize perspective projection matrix
+	float degress = 60.0;
+	float fov_radians = degress * (std::numbers::pi / 180.0);
+	float aspect = static_cast<float>(window_height) / window_width;
+	float znear = 0.1;
+	float zfar = 100.0;
+	projection_matrix = mat4_make_perspective(fov_radians, aspect, znear, zfar);
 
 	load_cube_mesh_data();
 	// load_obj_file_data("../assets/cube.obj");
@@ -80,13 +88,6 @@ void process_input()
 	}
 }
 
-// Function that receives a 3D vector and returns a projected 2D point
-vec2_t project(vec3_t point)
-{
-	vec2_t projected_point = {.x = fov_factor * point.x / point.z, .y = fov_factor * point.y / point.z};
-	return projected_point;
-}
-
 void update()
 {
 	PROFILE_FUNCTION();
@@ -109,18 +110,16 @@ void update()
 
 	mesh.rotation.x += 0.01;
 	mesh.rotation.y += 0.01;
-	// mesh.rotation.z += 0.01;
+	mesh.rotation.z += 0.01;
 
-	mesh.scale.x += 0.002;
-	mesh.scale.y += 0.001;
-	mesh.translation.x += 0.01;
+	// mesh.translation.x += 0.01;
 	mesh.translation.z = 5;
 
 	// Create a scale, rotation, and translation matrices
 	auto scale_matrix = mat4_make_scale(mesh.scale.x, mesh.scale.y, mesh.scale.z);
 	auto rotation_matrix_x = mat4_make_rotation_x(mesh.rotation.x);
 	auto rotation_matrix_y = mat4_make_rotation_x(mesh.rotation.y);
-	auto rotation_matrix_z = mat4_make_rotation_x(mesh.rotation.z);
+	auto rotation_matrix_z = mat4_make_rotation_z(mesh.rotation.z);
 	auto translation_matrix = mat4_make_translation(mesh.translation.x, mesh.translation.y, mesh.translation.z);
 
 	// Create a World Matrix combining scale, rotation, and translation matrices
@@ -170,14 +169,17 @@ void update()
 		}
 
 		// Loop all three vertices to perform a projection
-		vec2_t projected_points[3];
+		vec4_t projected_points[3];
 		for(int j = 0; j < 3; j++)
 		{
 			// Project the current point
-			projected_points[j] = project(vec3_from_vec4(transformed_vertices[j]));
-			// Scale and translate the projected points to the middle of the screen
-			projected_points[j].x += window_width / 2;
-			projected_points[j].y += window_height / 2;
+			projected_points[j] = mat4_mul_vec4_project(projection_matrix, transformed_vertices[j]);
+			// Scale into the view
+			projected_points[j].x *= window_width / 2.0;
+			projected_points[j].y *= window_height / 2.0;
+			// Translate the projected points to the middle of the screen
+			projected_points[j].x += window_width / 2.0;
+			projected_points[j].y += window_height / 2.0;
 		}
 
 		// Calculate the avg depth for each face based on the vertices after the transformation
