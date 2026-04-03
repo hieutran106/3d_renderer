@@ -1,5 +1,6 @@
 #include "Array.h"
 #include "Display.h"
+#include "Light.h"
 #include "Logger.h"
 #include "Matrix.h"
 #include "Mesh.h"
@@ -21,6 +22,33 @@ mat4_t projection_matrix;
 
 int previous_frame_time = 0;
 
+namespace helper
+{
+mat4_t initializePerspectiveProjectionMatrix()
+{
+	float degress = 60.0;
+	float fov_radians = degress * (std::numbers::pi / 180.0);
+	float aspect = static_cast<float>(window_height) / window_width;
+	float znear = 0.1;
+	float zfar = 100.0;
+	return mat4_make_perspective(fov_radians, aspect, znear, zfar);
+}
+
+mat4_t initializeTransformationMatrix(mesh_t & mesh)
+{
+	auto scale_matrix = mat4_make_scale(mesh.scale.x, mesh.scale.y, mesh.scale.z);
+	auto rotation_matrix_x = mat4_make_rotation_x(mesh.rotation.x);
+	auto rotation_matrix_y = mat4_make_rotation_x(mesh.rotation.y);
+	auto rotation_matrix_z = mat4_make_rotation_z(mesh.rotation.z);
+	auto translation_matrix = mat4_make_translation(mesh.translation.x, mesh.translation.y, mesh.translation.z);
+
+	// Create a World Matrix combining scale, rotation, and translation matrices
+	// Order matters: First scale, then rotate, then translate. [T]*[R]*[S]*v
+	mat4_t world_matrix = translation_matrix * rotation_matrix_x * rotation_matrix_y * rotation_matrix_z * scale_matrix;
+	return world_matrix;
+}
+}
+
 void setup()
 {
 	// Initialize render mode and triangle culling mode
@@ -31,13 +59,7 @@ void setup()
 	color_buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
 
 	// Initialize perspective projection matrix
-	float degress = 60.0;
-	float fov_radians = degress * (std::numbers::pi / 180.0);
-	float aspect = static_cast<float>(window_height) / window_width;
-	float znear = 0.1;
-	float zfar = 100.0;
-	projection_matrix = mat4_make_perspective(fov_radians, aspect, znear, zfar);
-
+	projection_matrix = helper::initializePerspectiveProjectionMatrix();
 	load_cube_mesh_data();
 	// load_obj_file_data("../assets/cube.obj");
 }
@@ -115,16 +137,7 @@ void update()
 	// mesh.translation.x += 0.01;
 	mesh.translation.z = 5;
 
-	// Create a scale, rotation, and translation matrices
-	auto scale_matrix = mat4_make_scale(mesh.scale.x, mesh.scale.y, mesh.scale.z);
-	auto rotation_matrix_x = mat4_make_rotation_x(mesh.rotation.x);
-	auto rotation_matrix_y = mat4_make_rotation_x(mesh.rotation.y);
-	auto rotation_matrix_z = mat4_make_rotation_z(mesh.rotation.z);
-	auto translation_matrix = mat4_make_translation(mesh.translation.x, mesh.translation.y, mesh.translation.z);
-
-	// Create a World Matrix combining scale, rotation, and translation matrices
-	// Order matters: First scale, then rotate, then translate. [T]*[R]*[S]*v
-	mat4_t world_matrix = translation_matrix * rotation_matrix_x * rotation_matrix_y * rotation_matrix_z * scale_matrix;
+	mat4_t world_matrix = helper::initializeTransformationMatrix(mesh);
 
 	int num_faces = array_length(mesh.faces);
 	for(int i = 0; i < num_faces; i++)
@@ -185,8 +198,13 @@ void update()
 		// Calculate the avg depth for each face based on the vertices after the transformation
 		float avg_depth = (transformed_vertices[0].z + transformed_vertices[1].z + transformed_vertices[2].z) / 3.0f;
 
+		////////////////////////////////////////////////////////////////////////////////////////////////
+		/// Flat shading and light
+		uint32_t shaded_triangle = mesh_face.color;
+		shaded_triangle = 0xFFFFFF00;
+		// vec3_dot(light.direction, ) float theta = std::arcos(light.direction)
 		triangle_t projected_triangle = {
-			.color = mesh_face.color,
+			.color = shaded_triangle,
 			.points =
 				{
 						 {projected_points[0].x, projected_points[0].y},
