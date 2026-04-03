@@ -1,5 +1,4 @@
 #include "Display.h"
-
 #include "SDLHelper.h"
 
 enum cull_method cull_method;
@@ -9,6 +8,7 @@ SDL_Window * window = nullptr;
 SDL_Renderer * renderer = nullptr;
 uint32_t * color_buffer = nullptr;
 SDL_Texture * color_buffer_texture = nullptr;
+TTF_Font * font = nullptr;
 
 // Logical size
 int window_width = 1024;
@@ -25,6 +25,19 @@ bool initialize_window()
 		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Error initializing SDL");
 		return false;
 	}
+	if(!TTF_Init())
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Error initializing SDL_TTF");
+		return false;
+	}
+
+	font = TTF_OpenFont("../assets/fonts/arial.ttf", 16);
+	if(!font)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Error opening font");
+		return false;
+	}
+
 	SDL_WindowFlags windowFlags = SDL_WINDOW_HIGH_PIXEL_DENSITY;
 	windowFlags = windowFlags | SDL_WINDOW_RESIZABLE;
 	window = SDL_CreateWindow("3d renderer", 1024, 768, windowFlags);
@@ -104,6 +117,54 @@ void render_color_buffer()
 	SDL_UpdateTexture(color_buffer_texture, nullptr, color_buffer, window_width * sizeof(uint32_t));
 	SDL_RenderTexture(renderer, color_buffer_texture, nullptr, nullptr);
 }
+void render_text()
+{
+	SDL_Color white = {255, 255, 255, 255};
+	const char * renderMethodText = nullptr;
+	switch(render_method)
+	{
+		case RENDER_WIRE:
+			renderMethodText = "Render: RENDER_WIRE";
+			break;
+		case RENDER_WIRE_VERTEX:
+			renderMethodText = "Render: RENDER_WIRE_VERTEX";
+			break;
+		case RENDER_FILL_TRIANGLE:
+			renderMethodText = "Render: RENDER_FILL_TRIANGLE";
+			break;
+		case RENDER_FILL_TRIANGLE_WIRE:
+			renderMethodText = "Render: RENDER_FILL_TRIANGLE_WIRE";
+			break;
+	}
+	SDL_Surface * textSurface = TTF_RenderText_Blended(font, renderMethodText, 0, white);
+	SDL_Texture * textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+	SDL_DestroySurface(textSurface);
+
+	float textWidth = (float)textTexture->w;
+	float textHeight = (float)textTexture->h;
+
+	SDL_FRect destRect = {10.0f, 10.0f, textWidth, textHeight};
+	SDL_RenderTexture(renderer, textTexture, nullptr, &destRect);
+	SDL_DestroyTexture(textTexture);
+
+	// Render culling method
+	const char * cullMethodText = "Cull (C/D key): NONE";
+	if(cull_method == CULL_BACKFACE)
+	{
+		cullMethodText = "Cull (C/D key): CULL_BACKFACE";
+	}
+
+	textSurface = TTF_RenderText_Blended(font, cullMethodText, 0, white);
+	textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+	SDL_DestroySurface(textSurface);
+
+	textWidth = (float)textTexture->w;
+	textHeight = (float)textTexture->h;
+
+	destRect = {10.0f, 30.0f, textWidth, textHeight};
+	SDL_RenderTexture(renderer, textTexture, nullptr, &destRect);
+	SDL_DestroyTexture(textTexture);
+}
 
 void clear_color_buffer(uint32_t color)
 {
@@ -119,5 +180,6 @@ void destroy_window()
 {
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
+	TTF_Quit();
 	SDL_Quit();
 }

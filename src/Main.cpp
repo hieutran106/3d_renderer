@@ -282,6 +282,7 @@ void render()
 	// Clear the array of triangles to render every frame loop
 	// array_free(triangles_to_render);
 	render_color_buffer();
+	render_text();
 	SDL_RenderPresent(renderer);
 }
 

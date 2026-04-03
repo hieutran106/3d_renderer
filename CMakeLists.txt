@@ -61,7 +61,7 @@ add_executable(3d_renderer ${SOURCES})
 link_sdl3_xc(3d_renderer)
 link_sdl3_ttf_xc(3d_renderer)
 
-option(USE_SANITIZERS "Enable ASan and UBSan" OFF)
+option(USE_SANITIZERS "Enable ASan and UBSan" ON)
 if (USE_SANITIZERS)
     message(STATUS "Building with Address and Undefined Behavior Sanitizers")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address,undefined -fno-omit-frame-pointer")
