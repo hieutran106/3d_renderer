@@ -47,6 +47,21 @@ mat4_t initializeTransformationMatrix(mesh_t & mesh)
 	mat4_t world_matrix = translation_matrix * rotation_matrix_x * rotation_matrix_y * rotation_matrix_z * scale_matrix;
 	return world_matrix;
 }
+
+vec3_t getFaceNormalVector(const vec4_t (&transformed_vertices)[3])
+{
+	vec3_t vector_a = vec3_from_vec4(transformed_vertices[0]);
+	vec3_t vector_b = vec3_from_vec4(transformed_vertices[1]);
+	vec3_t vector_c = vec3_from_vec4(transformed_vertices[2]);
+
+	auto vector_ab = vector_b - vector_a;
+	auto vector_ac = vector_c - vector_a;
+	vec3_t normal = vec3_cross(vector_ab, vector_ac);
+
+	// Normalize the face normal vector - in-place update
+	vec3_normalize(&normal);
+	return normal;
+}
 }
 
 void setup()
@@ -60,8 +75,8 @@ void setup()
 
 	// Initialize perspective projection matrix
 	projection_matrix = helper::initializePerspectiveProjectionMatrix();
-	load_cube_mesh_data();
-	// load_obj_file_data("../assets/cube.obj");
+	// load_cube_mesh_data();
+	load_obj_file_data("../assets/f22.obj");
 }
 
 void process_input()
@@ -157,19 +172,11 @@ void update()
 			transformed_vertices[j] = mat4_mul_vec4(world_matrix, transformed_vertex);
 		}
 
+		vec3_t normal = helper::getFaceNormalVector(transformed_vertices);
 		// Check backface culling test to see if the current face should be projected
 		if(cull_method == CULL_BACKFACE)
 		{
 			vec3_t vector_a = vec3_from_vec4(transformed_vertices[0]);
-			vec3_t vector_b = vec3_from_vec4(transformed_vertices[1]);
-			vec3_t vector_c = vec3_from_vec4(transformed_vertices[2]);
-
-			auto vector_ab = vector_b - vector_a;
-			auto vector_ac = vector_c - vector_a;
-			vec3_t normal = vec3_cross(vector_ab, vector_ac);
-
-			// Normalize the face normal vector - in-place update
-			vec3_normalize(&normal);
 			// Find the vector between a point in the triangle and the camera origin
 			auto camera_ray = camera_position - vector_a;
 
@@ -200,11 +207,12 @@ void update()
 
 		////////////////////////////////////////////////////////////////////////////////////////////////
 		/// Flat shading and light
-		uint32_t shaded_triangle = mesh_face.color;
-		shaded_triangle = 0xFFFFFF00;
-		// vec3_dot(light.direction, ) float theta = std::arcos(light.direction)
+		float theta = std::acos(vec3_dot(light.direction, normal) / (vec3_length(light.direction) * vec3_length(normal)));
+		float percent = theta / std::numbers::pi;
+		uint32_t shaded_color = light_apply_intensity(mesh_face.color, percent);
+
 		triangle_t projected_triangle = {
-			.color = shaded_triangle,
+			.color = shaded_color,
 			.points =
 				{
 						 {projected_points[0].x, projected_points[0].y},
@@ -267,7 +275,7 @@ void render()
 				triangle.points[1].y, // vertex B
 				triangle.points[2].x,
 				triangle.points[2].y, // vertex C
-				0xFFFFFFFF
+				0xFFDDDDDD
 			);
 		}
 		// Draw triangle vertex points
