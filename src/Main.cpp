@@ -62,6 +62,7 @@ vec3_t getFaceNormalVector(const vec4_t (&transformed_vertices)[3])
 	vec3_normalize(&normal);
 	return normal;
 }
+
 std::array<vec4_t, 3> projectVertices(const mat4_t & projection_matrix, const vec4_t (&transformed_vertices)[3])
 {
 	std::array<vec4_t, 3> projected_points{};
@@ -126,6 +127,14 @@ void process_input()
 			else if(event.key.key == SDLK_4)
 			{
 				render_method = RENDER_FILL_TRIANGLE_WIRE;
+			}
+			else if(event.key.key == SDLK_5)
+			{
+				render_method = RENDER_TEXTURED;
+			}
+			else if(event.key.key == SDLK_6)
+			{
+				render_method = RENDER_TEXTURED_WIRE;
 			}
 			else if(event.key.key == SDLK_C)
 			{
@@ -260,7 +269,6 @@ void render()
 	for(int i = 0; i < num_faces; i++)
 	{
 		const triangle_t & triangle = triangles_to_render[i];
-
 		// Draw filled triangle
 		if(render_method == RENDER_FILL_TRIANGLE || render_method == RENDER_FILL_TRIANGLE_WIRE)
 		{

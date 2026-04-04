@@ -135,13 +135,19 @@ void render_text()
 		case RENDER_FILL_TRIANGLE_WIRE:
 			renderMethodText = "Render: RENDER_FILL_TRIANGLE_WIRE";
 			break;
+		case RENDER_TEXTURED:
+			renderMethodText = "Render: RENDER_TEXTURED";
+			break;
+		case RENDER_TEXTURED_WIRE:
+			renderMethodText = "Render: RENDER_TEXTURED_WIRE";
+			break;
 	}
 	SDL_Surface * textSurface = TTF_RenderText_Blended(font, renderMethodText, 0, white);
 	SDL_Texture * textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
 	SDL_DestroySurface(textSurface);
 
-	float textWidth = (float)textTexture->w;
-	float textHeight = (float)textTexture->h;
+	float textWidth = textTexture->w;
+	float textHeight = textTexture->h;
 
 	SDL_FRect destRect = {10.0f, 10.0f, textWidth, textHeight};
 	SDL_RenderTexture(renderer, textTexture, nullptr, &destRect);
