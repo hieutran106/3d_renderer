@@ -164,8 +164,8 @@ void render_text()
 	textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
 	SDL_DestroySurface(textSurface);
 
-	textWidth = (float)textTexture->w;
-	textHeight = (float)textTexture->h;
+	textWidth = textTexture->w;
+	textHeight = textTexture->h;
 
 	destRect = {10.0f, 30.0f, textWidth, textHeight};
 	SDL_RenderTexture(renderer, textTexture, nullptr, &destRect);

@@ -1,6 +1,6 @@
 #include "Texture.h"
 
-uint32_t * mesh_texture = NULL;
+const uint32_t * mesh_texture = nullptr;
 int texture_width = 64;
 int texture_height = 64;
 

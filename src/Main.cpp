@@ -94,8 +94,13 @@ void setup()
 
 	// Initialize perspective projection matrix
 	projection_matrix = helper::initializePerspectiveProjectionMatrix();
-	// load_cube_mesh_data();
-	load_obj_file_data("../assets/f22.obj");
+	// Manually load the hardcoded texture data from the static array
+	mesh_texture = reinterpret_cast<const uint32_t *>(REDBRICK_TEXTURE);
+	texture_width = 64;
+	texture_height = 64;
+
+	load_cube_mesh_data();
+	// load_obj_file_data("../assets/f22.obj");
 }
 
 void process_input()
@@ -238,6 +243,11 @@ void update()
 						 {projected_points[2].x, projected_points[2].y},
 
 						 },
+			.texcoords =
+				{
+						 {mesh_face.a_uv.u, mesh_face.a_uv.v}, {mesh_face.b_uv.u, mesh_face.b_uv.v}, {mesh_face.c_uv.u, mesh_face.c_uv.v}
+
+				},
 			.avg_depth = avg_depth
 		};
 		// Save the projected triangle in the array of triangles to render
@@ -269,6 +279,7 @@ void render()
 	for(int i = 0; i < num_faces; i++)
 	{
 		const triangle_t & triangle = triangles_to_render[i];
+		auto & points = triangle.points;
 		// Draw filled triangle
 		if(render_method == RENDER_FILL_TRIANGLE || render_method == RENDER_FILL_TRIANGLE_WIRE)
 		{
@@ -282,8 +293,28 @@ void render()
 				triangle.color
 			);
 		}
-		// Draw triangle frame
-		if(render_method == RENDER_WIRE || render_method == RENDER_WIRE_VERTEX || render_method == RENDER_FILL_TRIANGLE_WIRE)
+		if(render_method == RENDER_TEXTURED || render_method == RENDER_TEXTURED_WIRE)
+		{
+			auto & texcoords = triangle.texcoords;
+			draw_textured_triangle(
+				points[0].x,
+				points[0].y,
+				texcoords[0].u,
+				texcoords[0].v,
+				points[1].x,
+				points[1].y,
+				texcoords[1].u,
+				texcoords[1].v,
+				points[2].x,
+				points[0].y,
+				texcoords[2].u,
+				texcoords[2].v,
+				mesh_texture
+			);
+		}
+		// Draw triangle wireframe
+		if(render_method == RENDER_WIRE || render_method == RENDER_WIRE_VERTEX || render_method == RENDER_FILL_TRIANGLE_WIRE
+		   || render_method == RENDER_TEXTURED_WIRE)
 		{
 			draw_triangle(
 				triangle.points[0].x,
