@@ -62,6 +62,24 @@ vec3_t getFaceNormalVector(const vec4_t (&transformed_vertices)[3])
 	vec3_normalize(&normal);
 	return normal;
 }
+std::array<vec4_t, 3> projectVertices(const mat4_t & projection_matrix, const vec4_t (&transformed_vertices)[3])
+{
+	std::array<vec4_t, 3> projected_points{};
+	for(int j = 0; j < 3; j++)
+	{
+		// Project the current point
+		projected_points[j] = mat4_mul_vec4_project(projection_matrix, transformed_vertices[j]);
+		// Scale into the view
+		projected_points[j].x *= window_width / 2.0;
+		projected_points[j].y *= window_height / 2.0;
+		// Invert the y value to account for flipped screen y coordinate
+		projected_points[j].y *= -1;
+		// Translate the projected points to the middle of the screen
+		projected_points[j].x += window_width / 2.0;
+		projected_points[j].y += window_height / 2.0;
+	}
+	return projected_points;
+}
 }
 
 void setup()
@@ -146,8 +164,8 @@ void update()
 	triangles_to_render = nullptr;
 
 	mesh.rotation.x += 0.01;
-	mesh.rotation.y += 0.01;
-	mesh.rotation.z += 0.01;
+	// mesh.rotation.y += 0.01;
+	// mesh.rotation.z += 0.01;
 
 	// mesh.translation.x += 0.01;
 	mesh.translation.z = 5;
@@ -189,30 +207,21 @@ void update()
 		}
 
 		// Loop all three vertices to perform a projection
-		vec4_t projected_points[3];
-		for(int j = 0; j < 3; j++)
-		{
-			// Project the current point
-			projected_points[j] = mat4_mul_vec4_project(projection_matrix, transformed_vertices[j]);
-			// Scale into the view
-			projected_points[j].x *= window_width / 2.0;
-			projected_points[j].y *= window_height / 2.0;
-			// Translate the projected points to the middle of the screen
-			projected_points[j].x += window_width / 2.0;
-			projected_points[j].y += window_height / 2.0;
-		}
+		std::array<vec4_t, 3> projected_points = helper::projectVertices(projection_matrix, transformed_vertices);
 
 		// Calculate the avg depth for each face based on the vertices after the transformation
 		float avg_depth = (transformed_vertices[0].z + transformed_vertices[1].z + transformed_vertices[2].z) / 3.0f;
 
 		////////////////////////////////////////////////////////////////////////////////////////////////
 		/// Flat shading and light
-		float theta = std::acos(vec3_dot(light.direction, normal) / (vec3_length(light.direction) * vec3_length(normal)));
-		float percent = theta / std::numbers::pi;
-		uint32_t shaded_color = light_apply_intensity(mesh_face.color, percent);
+		// Calculate the shade intensity based on how aliged is the face normal and the opposite of the light direction
+		float light_intensity_factor = -vec3_dot(normal, light.direction);
+
+		// Calculate the triangle color based on the light angle
+		uint32_t triangle_color = light_apply_intensity(mesh_face.color, light_intensity_factor);
 
 		triangle_t projected_triangle = {
-			.color = shaded_color,
+			.color = triangle_color,
 			.points =
 				{
 						 {projected_points[0].x, projected_points[0].y},
