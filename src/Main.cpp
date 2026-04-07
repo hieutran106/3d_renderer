@@ -86,7 +86,7 @@ std::array<vec4_t, 3> projectVertices(const mat4_t & projection_matrix, const ve
 void setup()
 {
 	// Initialize render mode and triangle culling mode
-	render_method = RENDER_WIRE;
+	render_method = RENDER_TEXTURED_WIRE;
 	cull_method = CULL_BACKFACE;
 
 	color_buffer = new uint32_t[window_width * window_height];
@@ -177,9 +177,9 @@ void update()
 	array_free(triangles_to_render);
 	triangles_to_render = nullptr;
 
-	mesh.rotation.x += 0.01;
-	mesh.rotation.y += 0.01;
-	mesh.rotation.z += 0.01;
+	// mesh.rotation.x += 0.01;
+	// mesh.rotation.y += 0.01;
+	// mesh.rotation.z += 0.01;
 
 	// mesh.translation.x += 0.01;
 	mesh.translation.z = 5;
@@ -309,7 +309,7 @@ void render()
 				points[2].y,
 				texcoords[2].u,
 				texcoords[2].v,
-				mesh_texture
+				mesh_texture_debug
 			);
 		}
 		// Draw triangle wireframe

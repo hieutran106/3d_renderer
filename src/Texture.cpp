@@ -1,8 +1,37 @@
 #include "Texture.h"
 
+#include <array>
+#include <cstddef>
+
+namespace
+{
+constexpr std::size_t kTextureWidth = 64;
+constexpr std::size_t kTextureHeight = 64;
+constexpr std::size_t kTexturePixels = kTextureWidth * kTextureHeight;
+
+constexpr uint32_t green_pixel()
+{
+	return 0xFF00FF00u;
+}
+
+constexpr std::array<uint32_t, kTexturePixels> make_green_texture()
+{
+	std::array<uint32_t, kTexturePixels> tex{};
+	for(auto & px : tex)
+	{
+		px = green_pixel();
+	}
+	return tex;
+}
+
+constexpr auto kGreenTexture = make_green_texture();
+}
+
 const uint32_t * mesh_texture = nullptr;
-int texture_width = 64;
-int texture_height = 64;
+int texture_width = static_cast<int>(kTextureWidth);
+int texture_height = static_cast<int>(kTextureHeight);
+
+const uint32_t * mesh_texture_debug = kGreenTexture.data();
 
 const uint8_t REDBRICK_TEXTURE[] = {
 	0x38, 0x38, 0x38, 0xff, 0x38, 0x38, 0x38, 0xff, 0x38, 0x38, 0x38, 0xff, 0x38, 0x38, 0x38, 0xff, 0x38, 0x38, 0x38, 0xff, 0x38, 0x38, 0x38, 0xff, 0x38, 0x38,
