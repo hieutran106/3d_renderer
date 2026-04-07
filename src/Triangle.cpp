@@ -1,6 +1,7 @@
 #include "Triangle.h"
 #include "Display.h"
 #include "Swap.h"
+#include <assert.h>
 #include <cmath>
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -92,6 +93,43 @@ void draw_filled_triangle(int x0, int y0, int x1, int y1, int x2, int y2, uint32
 		fill_flat_top_triangle(x1, y1, Mx, My, x2, y2, color);
 	}
 }
+
+void draw_texel(
+	int x,
+	int y,
+	const uint32_t * texture,
+	vec2_t point_a,
+	vec2_t point_b,
+	vec2_t point_c,
+	float u0,
+	float v0,
+	float u1,
+	float v1,
+	float u2,
+	float v2
+)
+{
+	vec2_t point_p = {static_cast<float>(x), static_cast<float>(y)};
+	vec3_t weights = barycentric_weights(point_a, point_b, point_c, point_p);
+
+	float alpha = weights.x;
+	float beta = weights.y;
+	float gamma = weights.z;
+
+	float interpolated_u = u0 * alpha + u1 * beta + u2 * gamma;
+	float interpolated_v = v0 * alpha + v1 * beta + v2 * gamma;
+
+	int tex_x = static_cast<int>(interpolated_u * texture_width);
+	int tex_y = static_cast<int>(interpolated_v * texture_height);
+
+	assert(tex_x >= 0 && "tex_x must be positive");
+	assert(tex_y >= 0 && "tex_y must be positive");
+	auto colorIndex = ((texture_height - tex_y) * texture_width + tex_x) % (texture_width * texture_height);
+
+	assert(colorIndex < texture_width * texture_height && "colorIndex must be in valid range");
+	draw_pixel(x, y, texture[colorIndex]);
+}
+
 /*
  * Draw a textured triangle based on a texture array of colors.
  * We split the original triangle in two, half flat-bottom and half flat-top.
@@ -151,6 +189,12 @@ void draw_textured_triangle(
 		swap(&u0, &u1);
 		swap(&v0, &v1);
 	}
+
+	// Create vector points and texture coords after we sort the vertices
+	vec2_t point_a = {static_cast<float>(x0), static_cast<float>(y0)};
+	vec2_t point_b = {static_cast<float>(x1), static_cast<float>(y1)};
+	vec2_t point_c = {static_cast<float>(x2), static_cast<float>(y2)};
+
 	///////////////////////////////////////////////////////
 	// Render the upper part of the triangle (flat-bottom)
 	///////////////////////////////////////////////////////
@@ -176,8 +220,8 @@ void draw_textured_triangle(
 
 			for(int x = x_start; x < x_end; x++)
 			{
-				// Draw our pixel with a custom color
-				draw_pixel(x, y, (x % 2 == 0 && y % 2 == 0) ? 0xFFFF00FF : 0x00000000);
+				// Draw our pixel with the color that comes from the texture
+				draw_texel(x, y, texture, point_a, point_b, point_c, u0, v0, u1, v1, u2, v2);
 			}
 		}
 	}
@@ -189,9 +233,9 @@ void draw_textured_triangle(
 	inv_slope_2 = 0;
 
 	if(y2 - y1 != 0)
-		inv_slope_1 = (float)(x2 - x1) / abs(y2 - y1);
+		inv_slope_1 = static_cast<float>(x2 - x1) / abs(y2 - y1);
 	if(y2 - y0 != 0)
-		inv_slope_2 = (float)(x2 - x0) / abs(y2 - y0);
+		inv_slope_2 = static_cast<float>(x2 - x0) / abs(y2 - y0);
 
 	if(y2 - y1 != 0)
 	{
@@ -207,8 +251,8 @@ void draw_textured_triangle(
 
 			for(int x = x_start; x < x_end; x++)
 			{
-				/// Draw our pixel with a custom color
-				draw_pixel(x, y, (x % 2 == 0 && y % 2 == 0) ? 0xFFFF00FF : 0x00000000);
+				// Draw our pixel with the color that comes from the texture
+				draw_texel(x, y, texture, point_a, point_b, point_c, u0, v0, u1, v1, u2, v2);
 			}
 		}
 	}

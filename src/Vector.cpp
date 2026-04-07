@@ -22,6 +22,10 @@ vec2_t vec2_div(vec2_t v, float factor)
 {
 	return {.x = v.x / factor, .y = v.y / factor};
 }
+float vec2_cross(vec2_t a, vec2_t b)
+{
+	return a.x * b.y - a.y * b.x;
+}
 void vec2_normalize(vec2_t * v)
 {
 	const float len = vec2_length(*v);
@@ -87,6 +91,19 @@ vec3_t vec3_rotate_z(vec3_t v, float angle)
 	using std::cos, std::sin;
 	vec3_t rotated_vector = {.x = v.x * cos(angle) - v.y * sin(angle), .y = v.x * sin(angle) + v.y * cos(angle), .z = v.z};
 	return rotated_vector;
+}
+
+vec3_t barycentric_weights(vec2_t a, vec2_t b, vec2_t c, vec2_t p)
+{
+	float abc = std::abs(vec2_cross(vec2_sub(c, a), vec2_sub(b, a)));
+	float pbc = std::abs(vec2_cross(vec2_sub(c, p), vec2_sub(b, p)));
+
+	float apc = std::abs(vec2_cross(vec2_sub(a, p), vec2_sub(c, p)));
+
+	float alpha = pbc / abc;
+	float beta = apc / abc;
+	float gamma = 1 - alpha - beta;
+	return {alpha, beta, gamma};
 }
 
 vec4_t vec4_from_vec3(vec3_t v)
