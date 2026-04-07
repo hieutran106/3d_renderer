@@ -306,7 +306,7 @@ void render()
 				texcoords[1].u,
 				texcoords[1].v,
 				points[2].x,
-				points[0].y,
+				points[2].y,
 				texcoords[2].u,
 				texcoords[2].v,
 				mesh_texture
