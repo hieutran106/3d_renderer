@@ -1,6 +1,7 @@
 #include "Triangle.h"
 #include "Display.h"
 #include "Swap.h"
+#include <algorithm>
 #include <assert.h>
 #include <cmath>
 
@@ -122,11 +123,12 @@ void draw_texel(
 	int tex_x = static_cast<int>(interpolated_u * texture_width);
 	int tex_y = static_cast<int>(interpolated_v * texture_height);
 
-	assert(tex_x >= 0 && "tex_x must be positive");
-	assert(tex_y >= 0 && "tex_y must be positive");
-	auto colorIndex = ((texture_height - tex_y) * texture_width + tex_x) % (texture_width * texture_height);
+	// tex_x can go out of range whenever interpolated_u is not guaranteed to stay in [0, 1)
+	// Floating-point precision + Rounding behavior
+	tex_x = std::clamp(tex_x, 0, texture_width - 1);
+	tex_y = std::clamp(tex_y, 0, texture_height - 1);
 
-	assert(colorIndex < texture_width * texture_height && "colorIndex must be in valid range");
+	auto colorIndex = tex_y * texture_width + tex_x;
 	draw_pixel(x, y, texture[colorIndex]);
 }
 
