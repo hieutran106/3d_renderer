@@ -22,6 +22,10 @@ vec2_t vec2_div(vec2_t v, float factor)
 {
 	return {.x = v.x / factor, .y = v.y / factor};
 }
+vec2_t vec2_from_vec4(vec4_t v)
+{
+	return {.x = v.x, .y = v.y};
+}
 float vec2_cross(vec2_t a, vec2_t b)
 {
 	return a.x * b.y - a.y * b.x;

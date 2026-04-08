@@ -9,17 +9,25 @@ constexpr std::size_t kTextureWidth = 64;
 constexpr std::size_t kTextureHeight = 64;
 constexpr std::size_t kTexturePixels = kTextureWidth * kTextureHeight;
 
-constexpr uint32_t green_pixel()
+constexpr uint32_t red_pixel()
 {
-	return 0xFF00FF00u;
+	return 0xFFFF0000u;
+}
+
+constexpr uint32_t blue_pixel()
+{
+	return 0xFF0000FFu;
 }
 
 constexpr std::array<uint32_t, kTexturePixels> make_green_texture()
 {
 	std::array<uint32_t, kTexturePixels> tex{};
-	for(auto & px : tex)
+	for(std::size_t y = 0; y < kTextureHeight; ++y)
 	{
-		px = green_pixel();
+		for(std::size_t x = 0; x < kTextureWidth; ++x)
+		{
+			tex[y * kTextureWidth + x] = (y < kTextureHeight / 2) ? red_pixel() : blue_pixel();
+		}
 	}
 	return tex;
 }

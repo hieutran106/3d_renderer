@@ -17,6 +17,9 @@ vec3_t camera_position = {0, 0, 0};
 
 bool is_running = false;
 bool is_paused = false;
+bool rotate_x = false;
+bool rotate_y = false;
+bool rotate_z = false;
 
 mat4_t projection_matrix;
 
@@ -38,7 +41,7 @@ mat4_t initializeTransformationMatrix(mesh_t & mesh)
 {
 	auto scale_matrix = mat4_make_scale(mesh.scale.x, mesh.scale.y, mesh.scale.z);
 	auto rotation_matrix_x = mat4_make_rotation_x(mesh.rotation.x);
-	auto rotation_matrix_y = mat4_make_rotation_x(mesh.rotation.y);
+	auto rotation_matrix_y = mat4_make_rotation_y(mesh.rotation.y);
 	auto rotation_matrix_z = mat4_make_rotation_z(mesh.rotation.z);
 	auto translation_matrix = mat4_make_translation(mesh.translation.x, mesh.translation.y, mesh.translation.z);
 
@@ -48,7 +51,7 @@ mat4_t initializeTransformationMatrix(mesh_t & mesh)
 	return world_matrix;
 }
 
-vec3_t getFaceNormalVector(const vec4_t (&transformed_vertices)[3])
+vec3_t getFaceNormalVector(const std::array<vec4_t, 3> & transformed_vertices)
 {
 	vec3_t vector_a = vec3_from_vec4(transformed_vertices[0]);
 	vec3_t vector_b = vec3_from_vec4(transformed_vertices[1]);
@@ -63,7 +66,7 @@ vec3_t getFaceNormalVector(const vec4_t (&transformed_vertices)[3])
 	return normal;
 }
 
-std::array<vec4_t, 3> projectVertices(const mat4_t & projection_matrix, const vec4_t (&transformed_vertices)[3])
+std::array<vec4_t, 3> projectVertices(const mat4_t & projection_matrix, const std::array<vec4_t, 3> & transformed_vertices)
 {
 	std::array<vec4_t, 3> projected_points{};
 	for(int j = 0; j < 3; j++)
@@ -153,6 +156,18 @@ void process_input()
 			{
 				is_paused = !is_paused;
 			}
+			else if(event.key.key == SDLK_X)
+			{
+				rotate_x = !rotate_x;
+			}
+			else if(event.key.key == SDLK_Y)
+			{
+				rotate_y = !rotate_y;
+			}
+			else if(event.key.key == SDLK_Z)
+			{
+				rotate_z = !rotate_z;
+			}
 			break;
 	}
 }
@@ -177,10 +192,19 @@ void update()
 	array_free(triangles_to_render);
 	triangles_to_render = nullptr;
 
-	// mesh.rotation.x += 0.01;
-	// mesh.rotation.y += 0.01;
-	// mesh.rotation.z += 0.01;
+	if(rotate_x)
+	{
+		mesh.rotation.x += 0.01;
+	}
+	if(rotate_y)
+	{
+		mesh.rotation.y += 0.01;
+	}
 
+	if(rotate_z)
+	{
+		mesh.rotation.z += 0.01;
+	}
 	// mesh.translation.x += 0.01;
 	mesh.translation.z = 5;
 
@@ -196,7 +220,7 @@ void update()
 		face_vertices[1] = mesh.vertices[mesh_face.b - 1];
 		face_vertices[2] = mesh.vertices[mesh_face.c - 1];
 
-		vec4_t transformed_vertices[3];
+		std::array<vec4_t, 3> transformed_vertices;
 		// Loop all three vertices of this current face and apply transformation
 		for(int j = 0; j < 3; j++)
 		{
@@ -228,7 +252,7 @@ void update()
 
 		////////////////////////////////////////////////////////////////////////////////////////////////
 		/// Flat shading and light
-		// Calculate the shade intensity based on how aliged is the face normal and the opposite of the light direction
+		// Calculate the shade intensity based on how aligned is the face normal and the opposite of the light direction
 		float light_intensity_factor = -vec3_dot(normal, light.direction);
 
 		// Calculate the triangle color based on the light angle
@@ -236,16 +260,10 @@ void update()
 
 		triangle_t projected_triangle = {
 			.color = triangle_color,
-			.points =
-				{
-						 {projected_points[0].x, projected_points[0].y},
-						 {projected_points[1].x, projected_points[1].y},
-						 {projected_points[2].x, projected_points[2].y},
-
-						 },
+			.points = projected_points,
 			.texcoords =
 				{
-						 {mesh_face.a_uv.u, mesh_face.a_uv.v}, {mesh_face.b_uv.u, mesh_face.b_uv.v}, {mesh_face.c_uv.u, mesh_face.c_uv.v}
+							{mesh_face.a_uv.u, mesh_face.a_uv.v}, {mesh_face.b_uv.u, mesh_face.b_uv.v}, {mesh_face.c_uv.u, mesh_face.c_uv.v}
 
 				},
 			.avg_depth = avg_depth
@@ -299,17 +317,23 @@ void render()
 			draw_textured_triangle(
 				points[0].x,
 				points[0].y,
+				points[0].z,
+				points[0].w,
 				texcoords[0].u,
 				texcoords[0].v,
 				points[1].x,
 				points[1].y,
+				points[1].z,
+				points[1].w,
 				texcoords[1].u,
 				texcoords[1].v,
 				points[2].x,
 				points[2].y,
+				points[2].z,
+				points[2].w,
 				texcoords[2].u,
 				texcoords[2].v,
-				mesh_texture_debug
+				mesh_texture
 			);
 		}
 		// Draw triangle wireframe
