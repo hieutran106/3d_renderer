@@ -93,12 +93,12 @@ void setup()
 	cull_method = CULL_BACKFACE;
 
 	color_buffer = new uint32_t[window_width * window_height];
-	color_buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
+	color_buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
 
 	// Initialize perspective projection matrix
 	projection_matrix = helper::initializePerspectiveProjectionMatrix();
-	load_cube_mesh_data();
-	// load_obj_file_data("../assets/f22.obj");
+	// load_cube_mesh_data();
+	load_obj_file_data("../assets/cube.obj");
 
 	// Load the texture information from an external PNG file
 	load_png_texture_data("../assets/cube.png");
@@ -367,6 +367,7 @@ void render()
 void free_resource()
 {
 	free(color_buffer);
+	upng_free(png_texture);
 	array_free(mesh.faces);
 	array_free(mesh.vertices);
 }

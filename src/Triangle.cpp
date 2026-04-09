@@ -126,6 +126,7 @@ void draw_texel(int x, int y, const uint32_t * texture, vec4_t point_a, vec4_t p
 	// Map the UV coordinate to the full texture width and height
 	// tex_x can go out of range whenever interpolated_u is not guaranteed to stay in [0, 1)
 	// Floating-point precision + Rounding behavior
+	interpolated_v = 1.0 - interpolated_v;
 	int tex_x = std::clamp(static_cast<int>(interpolated_u * texture_width), 0, texture_width - 1);
 	int tex_y = std::clamp(static_cast<int>(interpolated_v * texture_height), 0, texture_height - 1);
 
