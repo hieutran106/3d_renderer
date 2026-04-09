@@ -35,11 +35,28 @@ constexpr std::array<uint32_t, kTexturePixels> make_green_texture()
 constexpr auto kGreenTexture = make_green_texture();
 }
 
-const uint32_t * mesh_texture = nullptr;
 int texture_width = static_cast<int>(kTextureWidth);
 int texture_height = static_cast<int>(kTextureHeight);
 
 const uint32_t * mesh_texture_debug = kGreenTexture.data();
+
+upng_t * png_texture = nullptr;
+const uint32_t * mesh_texture = nullptr;
+
+void load_png_texture_data(const char * filename)
+{
+	png_texture = upng_new_from_file(filename);
+	if(png_texture != nullptr)
+	{
+		upng_decode(png_texture);
+		if(upng_get_error(png_texture) == UPNG_EOK)
+		{
+			mesh_texture = (uint32_t *)upng_get_buffer(png_texture);
+			texture_width = upng_get_width(png_texture);
+			texture_height = upng_get_height(png_texture);
+		}
+	}
+}
 
 const uint8_t REDBRICK_TEXTURE[] = {
 	0x38, 0x38, 0x38, 0xff, 0x38, 0x38, 0x38, 0xff, 0x38, 0x38, 0x38, 0xff, 0x38, 0x38, 0x38, 0xff, 0x38, 0x38, 0x38, 0xff, 0x38, 0x38, 0x38, 0xff, 0x38, 0x38,

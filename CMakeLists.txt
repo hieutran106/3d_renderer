@@ -47,7 +47,7 @@ function(link_sdl3_ttf_xc target_name)
 endfunction()
 
 function(get_cpp_sources target_name result)
-    file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/src/*.cpp")
+    file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/src/*.cpp" "${CMAKE_SOURCE_DIR}/src/*.c")
     set(${result} ${SOURCES} PARENT_SCOPE)
     # debug
     message(STATUS "get_cpp_sources:")
