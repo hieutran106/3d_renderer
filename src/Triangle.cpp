@@ -130,13 +130,19 @@ void draw_texel(int x, int y, const uint32_t * texture, vec4_t point_a, vec4_t p
 	int tex_x = std::clamp(static_cast<int>(interpolated_u * texture_width), 0, texture_width - 1);
 	int tex_y = std::clamp(static_cast<int>(interpolated_v * texture_height), 0, texture_height - 1);
 
+	auto colorIndex = tex_y * texture_width + tex_x;
+	bool z_buffer_enabled = false;
+	if(!z_buffer_enabled)
+	{
+		draw_pixel(x, y, texture[colorIndex]);
+		return;
+	}
 	// Adjust 1/w so the pixels that are closer to the camera have smaller values
 	interpolated_reciprocal_w = 1.0 - interpolated_reciprocal_w;
 	// Only draw the pixel if the depth value is less than the one previously drawn,
 	// z_buffer value range from 0.0 (near) -> 1.0 (far)
 	if(interpolated_reciprocal_w < z_buffer[y * window_width + x])
 	{
-		auto colorIndex = tex_y * texture_width + tex_x;
 		draw_pixel(x, y, texture[colorIndex]);
 		z_buffer[y * window_width + x] = interpolated_reciprocal_w;
 	}

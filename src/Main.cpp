@@ -89,7 +89,7 @@ std::array<vec4_t, 3> projectVertices(const mat4_t & projection_matrix, const st
 void setup()
 {
 	// Initialize render mode and triangle culling mode
-	render_method = RENDER_TEXTURED_WIRE;
+	render_method = RENDER_FILL_TRIANGLE;
 	cull_method = CULL_NONE;
 
 	color_buffer = new uint32_t[window_width * window_height];
@@ -137,19 +137,11 @@ void process_input()
 			}
 			else if(event.key.key == SDLK_5)
 			{
-				render_method = RENDER_TEXTURED;
-			}
-			else if(event.key.key == SDLK_6)
-			{
-				render_method = RENDER_TEXTURED_WIRE;
+				render_method = render_method == RENDER_TEXTURED ? RENDER_TEXTURED_WIRE : RENDER_TEXTURED;
 			}
 			else if(event.key.key == SDLK_C)
 			{
-				cull_method = CULL_BACKFACE;
-			}
-			else if(event.key.key == SDLK_D)
-			{
-				cull_method = CULL_NONE;
+				cull_method = cull_method == CULL_BACKFACE ? CULL_NONE : CULL_BACKFACE;
 			}
 			else if(event.key.key == SDLK_P)
 			{
