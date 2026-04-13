@@ -17,7 +17,7 @@ vec3_t camera_position = {0, 0, 0};
 
 bool is_running = false;
 bool is_paused = false;
-bool rotate_x = false;
+bool rotate_x = true;
 bool rotate_y = false;
 bool rotate_z = false;
 
@@ -90,18 +90,19 @@ void setup()
 {
 	// Initialize render mode and triangle culling mode
 	render_method = RENDER_TEXTURED_WIRE;
-	cull_method = CULL_BACKFACE;
+	cull_method = CULL_NONE;
 
 	color_buffer = new uint32_t[window_width * window_height];
 	color_buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
+	z_buffer = new float[window_width * window_height];
 
 	// Initialize perspective projection matrix
 	projection_matrix = helper::initializePerspectiveProjectionMatrix();
 	// load_cube_mesh_data();
-	load_obj_file_data("../assets/cube.obj");
+	load_obj_file_data("../assets/f117.obj");
 
 	// Load the texture information from an external PNG file
-	load_png_texture_data("../assets/cube.png");
+	load_png_texture_data("../assets/f117.png");
 }
 
 void process_input()
@@ -192,7 +193,7 @@ void update()
 
 	if(rotate_x)
 	{
-		mesh.rotation.x += 0.01;
+		mesh.rotation.x += 0.02;
 	}
 	if(rotate_y)
 	{
@@ -289,6 +290,7 @@ void render()
 {
 	PROFILE_FUNCTION();
 	clear_color_buffer(0xFF000000);
+	clear_z_buffer();
 	draw_grid();
 	// Loop all projected triangles and render them
 	int num_faces = array_length(triangles_to_render);
@@ -357,7 +359,6 @@ void render()
 		}
 	}
 
-	// Clear the array of triangles to render every frame loop
 	// array_free(triangles_to_render);
 	render_color_buffer();
 	render_text();
@@ -366,7 +367,8 @@ void render()
 
 void free_resource()
 {
-	free(color_buffer);
+	delete[] color_buffer;
+	delete[] z_buffer;
 	upng_free(png_texture);
 	array_free(mesh.faces);
 	array_free(mesh.vertices);

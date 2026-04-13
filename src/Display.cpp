@@ -7,6 +7,7 @@ enum render_method render_method;
 SDL_Window * window = nullptr;
 SDL_Renderer * renderer = nullptr;
 uint32_t * color_buffer = nullptr;
+float * z_buffer = nullptr;
 SDL_Texture * color_buffer_texture = nullptr;
 TTF_Font * font = nullptr;
 
@@ -179,6 +180,16 @@ void clear_color_buffer(uint32_t color)
 		for(int x = 0; x < window_width; x++)
 		{
 			color_buffer[y * window_width + x] = color;
+		}
+	}
+}
+void clear_z_buffer()
+{
+	for(int y = 0; y < window_height; y++)
+	{
+		for(int x = 0; x < window_width; x++)
+		{
+			z_buffer[y * window_width + x] = 1.0f;
 		}
 	}
 }
