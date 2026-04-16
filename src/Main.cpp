@@ -11,7 +11,9 @@
 #include <stdlib.h>
 #include <string>
 
-triangle_t * triangles_to_render = nullptr;
+constexpr int MAX_TRIANGLE_PER_MESH = 10000;
+triangle_t triangles_to_render[MAX_TRIANGLE_PER_MESH];
+int num_triangles_to_render = 0;
 
 vec3_t camera_position = {0, 0, 0};
 
@@ -179,9 +181,8 @@ void update()
 	}
 	previous_frame_time = SDL_GetTicks();
 
-	// Initialize the array to triangles to render
-	array_free(triangles_to_render);
-	triangles_to_render = nullptr;
+	// Initialize the counter of triangles to render for the current frame
+	num_triangles_to_render = 0;
 
 	if(rotate_x)
 	{
@@ -196,7 +197,7 @@ void update()
 	{
 		mesh.rotation.z += 0.01;
 	}
-	// mesh.translation.x += 0.01;
+
 	mesh.translation.z = 5;
 
 	mat4_t world_matrix = helper::initializeTransformationMatrix(mesh);
@@ -238,9 +239,6 @@ void update()
 		// Loop all three vertices to perform a projection
 		std::array<vec4_t, 3> projected_points = helper::projectVertices(projection_matrix, transformed_vertices);
 
-		// Calculate the avg depth for each face based on the vertices after the transformation
-		float avg_depth = (transformed_vertices[0].z + transformed_vertices[1].z + transformed_vertices[2].z) / 3.0f;
-
 		////////////////////////////////////////////////////////////////////////////////////////////////
 		/// Flat shading and light
 		// Calculate the shade intensity based on how aligned is the face normal and the opposite of the light direction
@@ -252,31 +250,15 @@ void update()
 		triangle_t projected_triangle = {
 			.color = triangle_color,
 			.points = projected_points,
-			.texcoords =
-				{
-							{mesh_face.a_uv.u, mesh_face.a_uv.v}, {mesh_face.b_uv.u, mesh_face.b_uv.v}, {mesh_face.c_uv.u, mesh_face.c_uv.v}
+			.texcoords = {
+						  {mesh_face.a_uv.u, mesh_face.a_uv.v}, {mesh_face.b_uv.u, mesh_face.b_uv.v}, {mesh_face.c_uv.u, mesh_face.c_uv.v}
 
-				},
-			.avg_depth = avg_depth
+			}
 		};
 		// Save the projected triangle in the array of triangles to render
-		array_push(triangles_to_render, projected_triangle);
+		triangles_to_render[num_triangles_to_render] = projected_triangle;
+		num_triangles_to_render++;
 	}
-	// Sort the faces to render based on the avg_depth in descending order
-	// int num_triangles = array_length(triangles_to_render);
-	// for(int i = 0; i < num_triangles - 1; i++)
-	// {
-	// 	for(int j = i + 1; j < num_triangles; j++)
-	// 	{
-	// 		if(triangles_to_render[i].avg_depth < triangles_to_render[j].avg_depth)
-	// 		{
-	// 			// Swap the triangles positions in the array
-	// 			triangle_t temp = triangles_to_render[i];
-	// 			triangles_to_render[i] = triangles_to_render[j];
-	// 			triangles_to_render[j] = temp;
-	// 		}
-	// 	}
-	// }
 }
 void render()
 {
@@ -285,8 +267,7 @@ void render()
 	clear_z_buffer();
 	draw_grid();
 	// Loop all projected triangles and render them
-	int num_faces = array_length(triangles_to_render);
-	for(int i = 0; i < num_faces; i++)
+	for(int i = 0; i < num_triangles_to_render; i++)
 	{
 		const triangle_t & triangle = triangles_to_render[i];
 		auto & points = triangle.points;
