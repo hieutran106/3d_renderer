@@ -11,10 +11,6 @@
 #include <stdlib.h>
 #include <string>
 
-constexpr int MAX_TRIANGLE_PER_MESH = 10000;
-triangle_t triangles_to_render[MAX_TRIANGLE_PER_MESH];
-int num_triangles_to_render = 0;
-
 vec3_t camera_position = {0, 0, 0};
 
 bool is_running = false;
@@ -85,6 +81,23 @@ std::array<vec4_t, 3> projectVertices(const mat4_t & projection_matrix, const st
 		projected_points[j].y += window_height / 2.0;
 	}
 	return projected_points;
+}
+
+void updateMeshAnimation(mesh_t & mesh)
+{
+	if(rotate_x)
+	{
+		mesh.rotation.x += 0.02;
+	}
+	if(rotate_y)
+	{
+		mesh.rotation.y += 0.01;
+	}
+	if(rotate_z)
+	{
+		mesh.rotation.z += 0.01;
+	}
+	mesh.translation.z = 5;
 }
 }
 
@@ -169,8 +182,7 @@ void update()
 {
 	PROFILE_FUNCTION();
 	int time_to_wait = FRAME_TARGET_TIME - (SDL_GetTicks() - previous_frame_time);
-	// time_to_wait <= FRAME_TARGET_TIME is mostly useless,
-	if(time_to_wait > 0 && time_to_wait <= FRAME_TARGET_TIME)
+	if(time_to_wait > 0)
 	{
 		SDL_Delay(time_to_wait);
 	}
@@ -184,21 +196,7 @@ void update()
 	// Initialize the counter of triangles to render for the current frame
 	num_triangles_to_render = 0;
 
-	if(rotate_x)
-	{
-		mesh.rotation.x += 0.02;
-	}
-	if(rotate_y)
-	{
-		mesh.rotation.y += 0.01;
-	}
-
-	if(rotate_z)
-	{
-		mesh.rotation.z += 0.01;
-	}
-
-	mesh.translation.z = 5;
+	helper::updateMeshAnimation(mesh);
 
 	mat4_t world_matrix = helper::initializeTransformationMatrix(mesh);
 

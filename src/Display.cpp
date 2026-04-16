@@ -1,5 +1,6 @@
 #include "Display.h"
 #include "SDLHelper.h"
+#include <format>
 
 enum cull_method cull_method;
 enum render_method render_method;
@@ -18,6 +19,9 @@ int window_height = 768;
 int renderW = 0;
 int renderH = 0;
 float scale = 0;
+// Triangle to render
+int num_triangles_to_render = 0;
+triangle_t triangles_to_render[MAX_TRIANGLE_PER_MESH];
 
 bool initialize_window()
 {
@@ -118,6 +122,21 @@ void render_color_buffer()
 	SDL_UpdateTexture(color_buffer_texture, nullptr, color_buffer, window_width * sizeof(uint32_t));
 	SDL_RenderTexture(renderer, color_buffer_texture, nullptr, nullptr);
 }
+
+static void render_text_line(const char * text, float x, float y, SDL_Color color)
+{
+	SDL_Surface * textSurface = TTF_RenderText_Blended(font, text, 0, color);
+	SDL_Texture * textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+	SDL_DestroySurface(textSurface);
+
+	float textWidth = textTexture->w;
+	float textHeight = textTexture->h;
+
+	SDL_FRect destRect = {x, y, textWidth, textHeight};
+	SDL_RenderTexture(renderer, textTexture, nullptr, &destRect);
+	SDL_DestroyTexture(textTexture);
+}
+
 void render_text()
 {
 	SDL_Color white = {255, 255, 255, 255};
@@ -143,34 +162,21 @@ void render_text()
 			renderMethodText = "Render: RENDER_TEXTURED_WIRE";
 			break;
 	}
-	SDL_Surface * textSurface = TTF_RenderText_Blended(font, renderMethodText, 0, white);
-	SDL_Texture * textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
-	SDL_DestroySurface(textSurface);
-
-	float textWidth = textTexture->w;
-	float textHeight = textTexture->h;
-
-	SDL_FRect destRect = {10.0f, 10.0f, textWidth, textHeight};
-	SDL_RenderTexture(renderer, textTexture, nullptr, &destRect);
-	SDL_DestroyTexture(textTexture);
+	render_text_line(renderMethodText, 10.0f, 10.0f, white);
 
 	// Render culling method
-	const char * cullMethodText = "Cull (C/D key): NONE";
+	const char * cullMethodText = "Cull face: Disabled";
 	if(cull_method == CULL_BACKFACE)
 	{
-		cullMethodText = "Cull (C/D key): CULL_BACKFACE";
+		cullMethodText = "Cull face: Enabled";
 	}
 
-	textSurface = TTF_RenderText_Blended(font, cullMethodText, 0, white);
-	textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
-	SDL_DestroySurface(textSurface);
+	render_text_line(cullMethodText, 10.0f, 30.0f, white);
 
-	textWidth = textTexture->w;
-	textHeight = textTexture->h;
-
-	destRect = {10.0f, 30.0f, textWidth, textHeight};
-	SDL_RenderTexture(renderer, textTexture, nullptr, &destRect);
-	SDL_DestroyTexture(textTexture);
+	////////////////////////////////////////////////////////
+	// Render triangle to render count
+	std::string triangleCountText = std::format("Triangle to Render: {}", num_triangles_to_render);
+	render_text_line(triangleCountText.c_str(), 10.0f, 50.0f, white);
 }
 
 void clear_color_buffer(uint32_t color)

@@ -1,4 +1,5 @@
 #pragma once
+#include "Triangle.h"
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <stdlib.h>
@@ -41,6 +42,11 @@ extern int window_height;
 extern int renderW;
 extern int renderH;
 extern float scale;
+
+// Triangle to render
+constexpr int MAX_TRIANGLE_PER_MESH = 10000;
+extern triangle_t triangles_to_render[MAX_TRIANGLE_PER_MESH];
+extern int num_triangles_to_render;
 
 bool initialize_window();
 void draw_grid();
