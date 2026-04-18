@@ -4,8 +4,8 @@
 #include <SDL3_ttf/SDL_ttf.h>
 #include <stdlib.h>
 
-#define FPS 30
-#define FRAME_TARGET_TIME (1000 / FPS)
+constexpr int FPS = 30;
+constexpr int FRAME_TARGET_TIME = 1000 / FPS;
 
 // Render mode
 enum cull_method
@@ -47,6 +47,7 @@ extern float scale;
 constexpr int MAX_TRIANGLE_PER_MESH = 10000;
 extern triangle_t triangles_to_render[MAX_TRIANGLE_PER_MESH];
 extern int num_triangles_to_render;
+extern float deltaTime;
 
 bool initialize_window();
 void draw_grid();

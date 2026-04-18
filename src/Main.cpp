@@ -114,10 +114,10 @@ void setup()
 	// Initialize perspective projection matrix
 	projection_matrix = helper::initializePerspectiveProjectionMatrix();
 	// load_cube_mesh_data();
-	load_obj_file_data("../assets/f117.obj");
+	load_obj_file_data("../assets/cube.obj");
 
 	// Load the texture information from an external PNG file
-	load_png_texture_data("../assets/f117.png");
+	load_png_texture_data("../assets/cube.png");
 }
 
 void process_input()
@@ -136,21 +136,13 @@ void process_input()
 			}
 			else if(event.key.key == SDLK_1)
 			{
-				render_method = RENDER_WIRE_VERTEX;
+				render_method = render_method == RENDER_WIRE_VERTEX ? RENDER_WIRE : RENDER_WIRE_VERTEX;
 			}
 			else if(event.key.key == SDLK_2)
 			{
-				render_method = RENDER_WIRE;
+				render_method = render_method == RENDER_FILL_TRIANGLE ? RENDER_FILL_TRIANGLE_WIRE : RENDER_FILL_TRIANGLE;
 			}
 			else if(event.key.key == SDLK_3)
-			{
-				render_method = RENDER_FILL_TRIANGLE;
-			}
-			else if(event.key.key == SDLK_4)
-			{
-				render_method = RENDER_FILL_TRIANGLE_WIRE;
-			}
-			else if(event.key.key == SDLK_5)
 			{
 				render_method = render_method == RENDER_TEXTURED ? RENDER_TEXTURED_WIRE : RENDER_TEXTURED;
 			}
@@ -158,7 +150,7 @@ void process_input()
 			{
 				cull_method = cull_method == CULL_BACKFACE ? CULL_NONE : CULL_BACKFACE;
 			}
-			else if(event.key.key == SDLK_P)
+			else if(event.key.key == SDLK_SPACE)
 			{
 				is_paused = !is_paused;
 			}
@@ -187,6 +179,7 @@ void update()
 		SDL_Delay(time_to_wait);
 	}
 
+	deltaTime = SDL_GetTicks() - previous_frame_time;
 	if(is_paused)
 	{
 		return;

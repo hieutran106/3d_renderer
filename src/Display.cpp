@@ -22,6 +22,7 @@ float scale = 0;
 // Triangle to render
 int num_triangles_to_render = 0;
 triangle_t triangles_to_render[MAX_TRIANGLE_PER_MESH];
+float deltaTime = 0.0f;
 
 bool initialize_window()
 {
@@ -177,6 +178,11 @@ void render_text()
 	// Render triangle to render count
 	std::string triangleCountText = std::format("Triangle to Render: {}", num_triangles_to_render);
 	render_text_line(triangleCountText.c_str(), 10.0f, 50.0f, white);
+	////////////////////////////////////////////////////////
+	// Render frame time & fps
+	int fps = 1000 / deltaTime;
+	std::string frameTimeText = std::format("Frame time: {:.2f} ms, FPS: {}", deltaTime, fps);
+	render_text_line(frameTimeText.c_str(), 10.0f, 70.0f, white);
 }
 
 void clear_color_buffer(uint32_t color)
