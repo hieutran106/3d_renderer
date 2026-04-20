@@ -134,3 +134,4 @@ vec4_t mat4_mul_vec4_project(mat4_t mat_proj, vec4_t v)
 	}
 	return result;
 }
+mat4_t mat4_look_at(vec3_t eye, vec3_t target, vec3_t up) {}

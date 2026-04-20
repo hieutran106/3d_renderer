@@ -173,18 +173,19 @@ void process_input()
 void update()
 {
 	PROFILE_FUNCTION();
-	int time_to_wait = FRAME_TARGET_TIME - (SDL_GetTicks() - previous_frame_time);
+	const auto current_time = SDL_GetTicks();
+	int time_to_wait = FRAME_TARGET_TIME - (current_time - previous_frame_time);
 	if(time_to_wait > 0)
 	{
 		SDL_Delay(time_to_wait);
 	}
 
-	deltaTime = SDL_GetTicks() - previous_frame_time;
+	deltaTime = current_time - previous_frame_time;
+	previous_frame_time = current_time;
 	if(is_paused)
 	{
 		return;
 	}
-	previous_frame_time = SDL_GetTicks();
 
 	// Initialize the counter of triangles to render for the current frame
 	num_triangles_to_render = 0;
@@ -196,12 +197,9 @@ void update()
 	int num_faces = array_length(mesh.faces);
 	for(int i = 0; i < num_faces; i++)
 	{
-		face_t mesh_face = mesh.faces[i];
+		const face_t & mesh_face = mesh.faces[i];
 
-		vec3_t face_vertices[3];
-		face_vertices[0] = mesh.vertices[mesh_face.a - 1];
-		face_vertices[1] = mesh.vertices[mesh_face.b - 1];
-		face_vertices[2] = mesh.vertices[mesh_face.c - 1];
+		const vec3_t face_vertices[3] = {mesh.vertices[mesh_face.a - 1], mesh.vertices[mesh_face.b - 1], mesh.vertices[mesh_face.c - 1]};
 
 		std::array<vec4_t, 3> transformed_vertices;
 		// Loop all three vertices of this current face and apply transformation
@@ -233,18 +231,15 @@ void update()
 		////////////////////////////////////////////////////////////////////////////////////////////////
 		/// Flat shading and light
 		// Calculate the shade intensity based on how aligned is the face normal and the opposite of the light direction
-		float light_intensity_factor = -vec3_dot(normal, light.direction);
+		// float light_intensity_factor = -vec3_dot(normal, light.direction);
 
 		// Calculate the triangle color based on the light angle
-		uint32_t triangle_color = light_apply_intensity(mesh_face.color, light_intensity_factor);
+		// uint32_t triangle_color = light_apply_intensity(mesh_face.color, light_intensity_factor);
+
+		uint32_t shading = mesh_face.color;
 
 		triangle_t projected_triangle = {
-			.color = triangle_color,
-			.points = projected_points,
-			.texcoords = {
-						  {mesh_face.a_uv.u, mesh_face.a_uv.v}, {mesh_face.b_uv.u, mesh_face.b_uv.v}, {mesh_face.c_uv.u, mesh_face.c_uv.v}
-
-			}
+			.color = shading, .points = projected_points, .texcoords = {mesh_face.a_uv, mesh_face.b_uv, mesh_face.c_uv}
 		};
 		// Save the projected triangle in the array of triangles to render
 		triangles_to_render[num_triangles_to_render] = projected_triangle;
@@ -331,7 +326,9 @@ void render()
 
 	// array_free(triangles_to_render);
 	render_color_buffer();
-	render_text();
+	// render_text();
+	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+	SDL_RenderDebugTextFormat(renderer, 10.0f, 10.0f, "FPS: %.2f", 0.2);
 	SDL_RenderPresent(renderer);
 }
 

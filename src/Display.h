@@ -44,7 +44,7 @@ extern int renderH;
 extern float scale;
 
 // Triangle to render
-constexpr int MAX_TRIANGLE_PER_MESH = 10000;
+constexpr int MAX_TRIANGLE_PER_MESH = 1000;
 extern triangle_t triangles_to_render[MAX_TRIANGLE_PER_MESH];
 extern int num_triangles_to_render;
 extern float deltaTime;

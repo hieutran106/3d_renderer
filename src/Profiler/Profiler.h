@@ -3,11 +3,12 @@
 #include <iosfwd>
 
 #define PROFILING 0
-#ifdef PROFILING
+#if PROFILING
 #	define PROFILE_SCOPE(name) ProfileTimer timer##__LINE__(name)
 #	define PROFILE_FUNCTION() PROFILE_SCOPE(__func__)
 #else
 #	define PROFILE_SCOPE(name)
+#	define PROFILE_FUNCTION()
 #endif
 
 struct ProfileResult
