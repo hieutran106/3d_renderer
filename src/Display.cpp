@@ -22,7 +22,7 @@ float scale = 0;
 // Triangle to render
 int num_triangles_to_render = 0;
 triangle_t triangles_to_render[MAX_TRIANGLE_PER_MESH];
-float deltaTime = 0.0f;
+Uint64 deltaTime = 0;
 
 bool initialize_window()
 {
@@ -138,7 +138,7 @@ static void render_text_line(const char * text, float x, float y, SDL_Color colo
 	SDL_DestroyTexture(textTexture);
 }
 
-void render_text()
+void render_stats_text()
 {
 	SDL_Color white = {255, 255, 255, 255};
 	const char * renderMethodText = nullptr;
@@ -180,9 +180,10 @@ void render_text()
 	render_text_line(triangleCountText.c_str(), 10.0f, 50.0f, white);
 	////////////////////////////////////////////////////////
 	// Render frame time & fps
-	int fps = 1000 / deltaTime;
-	std::string frameTimeText = std::format("Frame time: {:.2f} ms, FPS: {}", deltaTime, fps);
-	render_text_line(frameTimeText.c_str(), 10.0f, 70.0f, white);
+	float fps = 1000 / static_cast<float>(deltaTime);
+	std::string frameTimeText = std::format("deltaTime: {} ms, FPS: {:3.0f}", deltaTime, fps);
+	// render_text_line(frameTimeText.c_str(), 10.0f, 70.0f, white);
+	SDL_LogDebug(MY_LOG_RENDER, frameTimeText.c_str());
 }
 
 void clear_color_buffer(uint32_t color)

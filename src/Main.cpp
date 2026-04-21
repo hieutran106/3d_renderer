@@ -97,7 +97,7 @@ void updateMeshAnimation(mesh_t & mesh)
 	{
 		mesh.rotation.z += 0.01;
 	}
-	mesh.translation.z = 5;
+	mesh.translation.z = 8;
 }
 }
 
@@ -174,13 +174,16 @@ void update()
 {
 	PROFILE_FUNCTION();
 	const auto current_time = SDL_GetTicks();
-	int time_to_wait = FRAME_TARGET_TIME - (current_time - previous_frame_time);
+	deltaTime = current_time - previous_frame_time;
+	int time_to_wait = FRAME_TARGET_TIME - deltaTime;
+
+	SDL_LogDebug(MY_LOG_RENDER, "deltaTime=%d time_to_wait=%d", deltaTime, time_to_wait);
+
 	if(time_to_wait > 0)
 	{
 		SDL_Delay(time_to_wait);
 	}
 
-	deltaTime = current_time - previous_frame_time;
 	previous_frame_time = current_time;
 	if(is_paused)
 	{
@@ -246,9 +249,13 @@ void update()
 		num_triangles_to_render++;
 	}
 }
-void render()
+void render_scene_to_buffer()
 {
-	PROFILE_FUNCTION();
+	if(is_paused)
+	{
+		return;
+	}
+
 	clear_color_buffer(0xFF000000);
 	clear_z_buffer();
 	draw_grid();
@@ -323,12 +330,13 @@ void render()
 			draw_rect(triangle.points[2].x - 3, triangle.points[2].y - 3, 6, 6, 0xFFFF0000); // vertex C
 		}
 	}
-
-	// array_free(triangles_to_render);
+}
+void render()
+{
+	PROFILE_FUNCTION();
+	render_scene_to_buffer();
 	render_color_buffer();
-	// render_text();
-	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-	SDL_RenderDebugTextFormat(renderer, 10.0f, 10.0f, "FPS: %.2f", 0.2);
+	render_stats_text();
 	SDL_RenderPresent(renderer);
 }
 
@@ -344,8 +352,8 @@ void free_resource()
 int main(int argc, char * argv[])
 {
 	PROFILE_FUNCTION();
-	SDL_SetLogPriorities(SDL_LOG_PRIORITY_DEBUG);
-	SDL_SetLogPriority(MY_LOG_OBJ, SDL_LOG_PRIORITY_DEBUG);
+	SDL_SetLogPriorities(SDL_LOG_PRIORITY_INFO);
+	// SDL_SetLogPriority(MY_LOG_OBJ, SDL_LOG_PRIORITY_DEBUG);
 	is_running = initialize_window();
 	setup();
 
