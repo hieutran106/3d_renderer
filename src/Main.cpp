@@ -1,4 +1,5 @@
 #include "Array.h"
+#include "Camera.h"
 #include "Display.h"
 #include "Light.h"
 #include "Logger.h"
@@ -11,15 +12,18 @@
 #include <stdlib.h>
 #include <string>
 
-vec3_t camera_position = {0, 0, 0};
-
 bool is_running = false;
 bool is_paused = false;
-bool rotate_x = true;
+bool rotate_x = false;
 bool rotate_y = false;
 bool rotate_z = false;
 
+/////////////////////////////////////////////////////////////////////////////////////
+/// Global matrices
+/////////////////////////////////////////////////////////////////////////////////////
 mat4_t projection_matrix;
+mat4_t world_matrix;
+mat4_t view_matrix;
 
 int previous_frame_time = 0;
 
@@ -104,8 +108,8 @@ void updateMeshAnimation(mesh_t & mesh)
 void setup()
 {
 	// Initialize render mode and triangle culling mode
-	render_method = RENDER_FILL_TRIANGLE;
-	cull_method = CULL_NONE;
+	render_method = RENDER_TEXTURED;
+	cull_method = CULL_BACKFACE;
 
 	color_buffer = new uint32_t[window_width * window_height];
 	color_buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
@@ -114,10 +118,10 @@ void setup()
 	// Initialize perspective projection matrix
 	projection_matrix = helper::initializePerspectiveProjectionMatrix();
 	// load_cube_mesh_data();
-	load_obj_file_data("../assets/cube.obj");
+	load_obj_file_data("../assets/efa.obj");
 
 	// Load the texture information from an external PNG file
-	load_png_texture_data("../assets/cube.png");
+	load_png_texture_data("../assets/efa.png");
 }
 
 void process_input()
@@ -195,6 +199,13 @@ void update()
 
 	helper::updateMeshAnimation(mesh);
 
+	// Change camera position per aniumation frame
+	camera.position.x += 0.08;
+	camera.position.y += 0.08;
+	vec3_t target = {0, 0, 8};
+	vec3_t up = {0, 1, 0};
+	view_matrix = mat4_look_at(camera.position, target, up);
+
 	mat4_t world_matrix = helper::initializeTransformationMatrix(mesh);
 
 	int num_faces = array_length(mesh.faces);
@@ -209,7 +220,10 @@ void update()
 		for(int j = 0; j < 3; j++)
 		{
 			vec4_t transformed_vertex = vec4_from_vec3(face_vertices[j]);
-			transformed_vertices[j] = mat4_mul_vec4(world_matrix, transformed_vertex);
+			transformed_vertex = mat4_mul_vec4(world_matrix, transformed_vertex);
+			// Transform the world space to camera space
+			transformed_vertex = mat4_mul_vec4(view_matrix, transformed_vertex);
+			transformed_vertices[j] = transformed_vertex;
 		}
 
 		vec3_t normal = helper::getFaceNormalVector(transformed_vertices);
@@ -218,7 +232,8 @@ void update()
 		{
 			vec3_t vector_a = vec3_from_vec4(transformed_vertices[0]);
 			// Find the vector between a point in the triangle and the camera origin
-			auto camera_ray = camera_position - vector_a;
+			vec3_t origin = {0, 0, 0};
+			vec3_t camera_ray = origin - vector_a;
 
 			// Calculate how aligned the camera ray is with the face normal (Using dot product)
 			auto culling = vec3_dot(normal, camera_ray);
@@ -234,12 +249,10 @@ void update()
 		////////////////////////////////////////////////////////////////////////////////////////////////
 		/// Flat shading and light
 		// Calculate the shade intensity based on how aligned is the face normal and the opposite of the light direction
-		// float light_intensity_factor = -vec3_dot(normal, light.direction);
+		float light_intensity_factor = -vec3_dot(normal, light.direction);
 
 		// Calculate the triangle color based on the light angle
-		// uint32_t triangle_color = light_apply_intensity(mesh_face.color, light_intensity_factor);
-
-		uint32_t shading = mesh_face.color;
+		uint32_t shading = light_apply_intensity(mesh_face.color, light_intensity_factor);
 
 		triangle_t projected_triangle = {
 			.color = shading, .points = projected_points, .texcoords = {mesh_face.a_uv, mesh_face.b_uv, mesh_face.c_uv}
@@ -258,7 +271,7 @@ void render_scene_to_buffer()
 
 	clear_color_buffer(0xFF000000);
 	clear_z_buffer();
-	draw_grid();
+	// draw_grid();
 	// Loop all projected triangles and render them
 	for(int i = 0; i < num_triangles_to_render; i++)
 	{
