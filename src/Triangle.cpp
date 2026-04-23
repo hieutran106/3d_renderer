@@ -200,6 +200,8 @@ void draw_texel(int x, int y, const uint32_t * texture, vec4_t point_a, vec4_t p
 	interpolated_reciprocal_w = 1.0 - interpolated_reciprocal_w;
 	// Only draw the pixel if the depth value is less than the one previously drawn,
 	// z_buffer value range from 0.0 (near) -> 1.0 (far)
+	auto test = y * window_width + x;
+	int h = 0;
 	if(interpolated_reciprocal_w < z_buffer[y * window_width + x])
 	{
 		draw_pixel(x, y, texture[colorIndex]);

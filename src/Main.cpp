@@ -14,9 +14,11 @@
 
 bool is_running = false;
 bool is_paused = false;
+
 bool rotate_x = false;
 bool rotate_y = false;
 bool rotate_z = false;
+vec3_t mesh_rotation;
 
 /////////////////////////////////////////////////////////////////////////////////////
 /// Global matrices
@@ -87,21 +89,40 @@ std::array<vec4_t, 3> projectVertices(const mat4_t & projection_matrix, const st
 	return projected_points;
 }
 
-void updateMeshAnimation(mesh_t & mesh)
+void updateMeshAnimation(mesh_t & mesh, float deltaTime)
 {
 	if(rotate_x)
 	{
-		mesh.rotation.x += 0.02;
+		mesh.rotation.x += mesh_rotation.x * deltaTime;
 	}
 	if(rotate_y)
 	{
-		mesh.rotation.y += 0.01;
+		mesh.rotation.y += mesh_rotation.y * deltaTime;
 	}
 	if(rotate_z)
 	{
-		mesh.rotation.z += 0.01;
+		mesh.rotation.z += mesh_rotation.z * deltaTime;
 	}
-	mesh.translation.z = 8;
+	mesh.translation.z = 6;
+}
+
+void setupMeshRotation(vec3_t & mesh_rotation, float x, float y, float z)
+{
+	if(x > 0)
+	{
+		rotate_x = true;
+		mesh_rotation.x = x;
+	}
+	if(y > 0)
+	{
+		rotate_y = true;
+		mesh_rotation.y = y;
+	}
+	if(z > 0)
+	{
+		rotate_z = true;
+		mesh_rotation.z = z;
+	}
 }
 }
 
@@ -110,6 +131,8 @@ void setup()
 	// Initialize render mode and triangle culling mode
 	render_method = RENDER_TEXTURED;
 	cull_method = CULL_BACKFACE;
+
+	helper::setupMeshRotation(mesh_rotation, 0.0, 0.0, 0.0);
 
 	color_buffer = new uint32_t[window_width * window_height];
 	color_buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
@@ -126,6 +149,7 @@ void setup()
 
 void process_input()
 {
+	float deltaTimeMs = static_cast<float>(deltaTime) / 1000.0f;
 	SDL_Event event;
 	SDL_PollEvent(&event);
 	switch(event.type)
@@ -170,6 +194,32 @@ void process_input()
 			{
 				rotate_z = !rotate_z;
 			}
+			else if(event.key.key == SDLK_W)
+			{
+				camera.forward_velocity = vec3_mul(camera.direction, 5.0 * deltaTimeMs);
+				camera.position = camera.position + camera.forward_velocity;
+			}
+			else if(event.key.key == SDLK_S)
+			{
+				camera.forward_velocity = vec3_mul(camera.direction, 5.0 * deltaTimeMs);
+				camera.position = camera.position - camera.forward_velocity;
+			}
+			else if(event.key.key == SDLK_A)
+			{
+				camera.yaw += 1.0 * deltaTimeMs;
+			}
+			else if(event.key.key == SDLK_D)
+			{
+				camera.yaw -= 1.0 * deltaTimeMs;
+			}
+			else if(event.key.key == SDLK_UP)
+			{
+				camera.position.y += 3.0 * deltaTimeMs;
+			}
+			else if(event.key.key == SDLK_DOWN)
+			{
+				camera.position.y -= 3.0 * deltaTimeMs;
+			}
 			break;
 	}
 }
@@ -194,17 +244,21 @@ void update()
 		return;
 	}
 
+	float deltaTimeMs = static_cast<float>(deltaTime) / 1000.0f;
 	// Initialize the counter of triangles to render for the current frame
 	num_triangles_to_render = 0;
 
-	helper::updateMeshAnimation(mesh);
+	helper::updateMeshAnimation(mesh, deltaTimeMs);
 
-	// Change camera position per aniumation frame
-	camera.position.x += 0.08;
-	camera.position.y += 0.08;
-	vec3_t target = {0, 0, 8};
-	vec3_t up = {0, 1, 0};
-	view_matrix = mat4_look_at(camera.position, target, up);
+	// TODO: compute the camera for the camera movement
+	vec3_t up_direction = {0, 1, 0};
+
+	vec3_t target = {0, 0, 1};
+	mat4_t camera_yaw_rotation = mat4_make_rotation_y(camera.yaw);
+	camera.direction = vec3_from_vec4(mat4_mul_vec4(camera_yaw_rotation, vec4_from_vec3(target)));
+
+	target = camera.position + camera.direction;
+	view_matrix = mat4_look_at(camera.position, target, up_direction);
 
 	mat4_t world_matrix = helper::initializeTransformationMatrix(mesh);
 

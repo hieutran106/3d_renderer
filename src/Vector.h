@@ -16,6 +16,11 @@ struct vec3_t
 	{
 		return {.x = x - other.x, .y = y - other.y, .z = z - other.z};
 	}
+
+	vec3_t operator+(const vec3_t & other) const
+	{
+		return {.x = x + other.x, .y = y + other.y, .z = z + other.z};
+	}
 };
 
 struct vec4_t
