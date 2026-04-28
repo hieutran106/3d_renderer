@@ -1,5 +1,6 @@
 #include "Array.h"
 #include "Camera.h"
+#include "Clipping.h"
 #include "Display.h"
 #include "Light.h"
 #include "Logger.h"
@@ -70,13 +71,13 @@ vec3_t getFaceNormalVector(const std::array<vec4_t, 3> & transformed_vertices)
 	return normal;
 }
 
-std::array<vec4_t, 3> projectVertices(const mat4_t & projection_matrix, const std::array<vec4_t, 3> & transformed_vertices)
+std::array<vec4_t, 3> projectTriangle(const mat4_t & projection_matrix, const std::array<vec4_t, 3> & triangle)
 {
 	std::array<vec4_t, 3> projected_points{};
 	for(int j = 0; j < 3; j++)
 	{
 		// Project the current point
-		projected_points[j] = mat4_mul_vec4_project(projection_matrix, transformed_vertices[j]);
+		projected_points[j] = mat4_mul_vec4_project(projection_matrix, triangle[j]);
 		// Scale into the view
 		projected_points[j].x *= window_width / 2.0;
 		projected_points[j].y *= window_height / 2.0;
@@ -138,13 +139,22 @@ void setup()
 	color_buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
 	z_buffer = new float[window_width * window_height];
 
-	// Initialize perspective projection matrix
-	projection_matrix = helper::initializePerspectiveProjectionMatrix();
+	// Initialize the perspective projection matrix
+	float degress = 60.0;
+	float fov_radians = degress * (std::numbers::pi / 180.0);
+	float aspect = static_cast<float>(window_height) / window_width;
+	float z_near = 0.1;
+	float z_far = 100.0;
+	projection_matrix = mat4_make_perspective(fov_radians, aspect, z_near, z_far);
+
+	// -- Initialize frustum planes with a point and normal
+	init_frustum_planes(fov_radians, z_near, z_far);
+
 	// load_cube_mesh_data();
-	load_obj_file_data("../assets/efa.obj");
+	load_obj_file_data("../assets/cube.obj");
 
 	// Load the texture information from an external PNG file
-	load_png_texture_data("../assets/efa.png");
+	load_png_texture_data("../assets/cube.png");
 }
 
 void process_input()
@@ -196,12 +206,12 @@ void process_input()
 			}
 			else if(event.key.key == SDLK_W)
 			{
-				camera.forward_velocity = vec3_mul(camera.direction, 5.0 * deltaTimeMs);
+				camera.forward_velocity = vec3_mul(camera.direction, 8.0 * deltaTimeMs);
 				camera.position = camera.position + camera.forward_velocity;
 			}
 			else if(event.key.key == SDLK_S)
 			{
-				camera.forward_velocity = vec3_mul(camera.direction, 5.0 * deltaTimeMs);
+				camera.forward_velocity = vec3_mul(camera.direction, 8.0 * deltaTimeMs);
 				camera.position = camera.position - camera.forward_velocity;
 			}
 			else if(event.key.key == SDLK_A)
@@ -214,11 +224,11 @@ void process_input()
 			}
 			else if(event.key.key == SDLK_UP)
 			{
-				camera.position.y += 3.0 * deltaTimeMs;
+				camera.position.y += 8.0 * deltaTimeMs;
 			}
 			else if(event.key.key == SDLK_DOWN)
 			{
-				camera.position.y -= 3.0 * deltaTimeMs;
+				camera.position.y -= 8.0 * deltaTimeMs;
 			}
 			break;
 	}
@@ -265,6 +275,8 @@ void update()
 	int num_faces = array_length(mesh.faces);
 	for(int i = 0; i < num_faces; i++)
 	{
+		// if(i != 4)
+		// 	continue;
 		const face_t & mesh_face = mesh.faces[i];
 
 		const vec3_t face_vertices[3] = {mesh.vertices[mesh_face.a - 1], mesh.vertices[mesh_face.b - 1], mesh.vertices[mesh_face.c - 1]};
@@ -297,23 +309,40 @@ void update()
 			}
 		}
 
-		// Loop all three vertices to perform a projection
-		std::array<vec4_t, 3> projected_points = helper::projectVertices(projection_matrix, transformed_vertices);
+		// Create a polygon from the original transformed triangle to be clipped
+		polygon_t polygon = create_polygon_from_triangle(
+			vec3_from_vec4(transformed_vertices[0]), vec3_from_vec4(transformed_vertices[1]), vec3_from_vec4(transformed_vertices[2])
+		);
+		// Clip the polygon and returns a new polygon with potential new vertices
+		clip_polygon(&polygon);
 
-		////////////////////////////////////////////////////////////////////////////////////////////////
-		/// Flat shading and light
-		// Calculate the shade intensity based on how aligned is the face normal and the opposite of the light direction
-		float light_intensity_factor = -vec3_dot(normal, light.direction);
+		std::array<triangle_t, MAX_NUM_POLY_TRIANGLES> triangles_after_clipping;
+		int num_triangles_after_clipping = 0;
 
-		// Calculate the triangle color based on the light angle
-		uint32_t shading = light_apply_intensity(mesh_face.color, light_intensity_factor);
+		triangles_from_polygon(&polygon, triangles_after_clipping, num_triangles_after_clipping);
 
-		triangle_t projected_triangle = {
-			.color = shading, .points = projected_points, .texcoords = {mesh_face.a_uv, mesh_face.b_uv, mesh_face.c_uv}
-		};
-		// Save the projected triangle in the array of triangles to render
-		triangles_to_render[num_triangles_to_render] = projected_triangle;
-		num_triangles_to_render++;
+		for(int t = 0; t < num_triangles_after_clipping; t++)
+		{
+			triangle_t triangle = triangles_after_clipping[t];
+			auto triangle_points = triangle.points;
+			// Loop all three vertices to perform a projection
+			std::array<vec4_t, 3> projected_points = helper::projectTriangle(projection_matrix, triangle_points);
+
+			////////////////////////////////////////////////////////////////////////////////////////////////
+			/// Flat shading and light
+			// Calculate the shade intensity based on how aligned is the face normal and the opposite of the light direction
+			float light_intensity_factor = -vec3_dot(normal, light.direction);
+
+			// Calculate the triangle color based on the light angle
+			uint32_t shading = light_apply_intensity(mesh_face.color, light_intensity_factor);
+
+			triangle_t triangle_to_render = {
+				.color = shading, .points = projected_points, .texcoords = {mesh_face.a_uv, mesh_face.b_uv, mesh_face.c_uv}
+			};
+			// Save the projected triangle in the array of triangles to render
+			triangles_to_render[num_triangles_to_render] = triangle_to_render;
+			num_triangles_to_render++;
+		}
 	}
 }
 void render_scene_to_buffer()
