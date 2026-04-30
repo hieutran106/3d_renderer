@@ -105,15 +105,15 @@ mat4_t mat4_mul_mat4(mat4_t a, mat4_t b)
 }
 
 // Perspective Projection Matrix
-mat4_t mat4_make_perspective(float fov, float aspect, float znear, float zfar)
+mat4_t mat4_make_perspective(float fov_y, float aspect, float znear, float zfar)
 {
 	// | (h/w)*1/tan(fov/2)             0              0                 0 |
 	// |                  0  1/tan(fov/2)              0                 0 |
 	// |                  0             0     zf/(zf-zn)  (-zf*zn)/(zf-zn) |
 	// |                  0             0              1                 0 |
 	mat4_t m = {{{0}}};
-	m.m[0][0] = aspect * (1 / tan(fov / 2));
-	m.m[1][1] = 1 / tan(fov / 2);
+	m.m[0][0] = aspect * (1 / tan(fov_y / 2));
+	m.m[1][1] = 1 / tan(fov_y / 2);
 	m.m[2][2] = zfar / (zfar - znear);
 	m.m[2][3] = (-zfar * znear) / (zfar - znear);
 	m.m[3][2] = 1.0;

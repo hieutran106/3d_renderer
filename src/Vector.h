@@ -28,6 +28,13 @@ struct vec3_t
 	}
 };
 
+// This handles cases where the float is on the left side.
+inline vec3_t operator*(float scalar, const vec3_t & v)
+{
+	// We can just reuse the operator we already defined above!
+	return v * scalar;
+}
+
 struct vec4_t
 {
 	float x;

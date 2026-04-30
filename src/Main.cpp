@@ -140,15 +140,20 @@ void setup()
 	z_buffer = new float[window_width * window_height];
 
 	// Initialize the perspective projection matrix
-	float degress = 60.0;
-	float fov_radians = degress * (std::numbers::pi / 180.0);
-	float aspect = static_cast<float>(window_height) / window_width;
+	float aspecty = static_cast<float>(window_height) / window_width;
+	float aspectx = static_cast<float>(window_width) / window_height;
+
+	float fov_y_degrees = 60.0;
+	float fov_y_radians = fov_y_degrees * (std::numbers::pi / 180.0);
+	// https://en.wikipedia.org/wiki/Field_of_view_in_video_games
+	float fov_x_radians = 2 * std::atan(std::tan(fov_y_radians / 2) * aspectx);
+
 	float z_near = 0.1;
-	float z_far = 100.0;
-	projection_matrix = mat4_make_perspective(fov_radians, aspect, z_near, z_far);
+	float z_far = 20.0;
+	projection_matrix = mat4_make_perspective(fov_y_radians, aspecty, z_near, z_far);
 
 	// -- Initialize frustum planes with a point and normal
-	init_frustum_planes(fov_radians, z_near, z_far);
+	init_frustum_planes(fov_x_radians, fov_y_radians, z_near, z_far);
 
 	// load_cube_mesh_data();
 	load_obj_file_data("../assets/cube.obj");

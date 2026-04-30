@@ -6,7 +6,7 @@ struct camera_t
 	vec3_t position;
 	vec3_t direction;
 	vec3_t forward_velocity;
-	// Rotation around y-axis, angle in radian
+	// Movement: turning left or right, Rotation around vertical axis, angle in radian
 	float yaw;
 };
 
