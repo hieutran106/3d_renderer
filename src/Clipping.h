@@ -24,10 +24,11 @@ constexpr int MAX_NUM_POLY_VERTICES = 10;
 struct polygon_t
 {
 	std::array<vec3_t, MAX_NUM_POLY_VERTICES> vertices;
+	std::array<tex2_t, MAX_NUM_POLY_VERTICES> texcoords;
 	int num_vertices;
 };
 
 void init_frustum_planes(float fov_x, float fov_y, float z_near, float z_far);
-polygon_t create_polygon_from_triangle(vec3_t v0, vec3_t v1, vec3_t v2);
+polygon_t create_polygon_from_triangle(vec3_t v0, vec3_t v1, vec3_t v2, tex2_t t0, tex2_t t1, tex2_t t2);
 void clip_polygon(polygon_t * polygon);
 void triangles_from_polygon(polygon_t * polygon, std::array<triangle_t, MAX_NUM_POLY_TRIANGLES> & outTriangles, int & num_triangles_after_clipping);

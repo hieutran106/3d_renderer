@@ -26,6 +26,11 @@ struct vec3_t
 	{
 		return {.x = x * scalar, .y = y * scalar, .z = z * scalar};
 	}
+
+	static vec3_t lerp(const vec3_t & a, const vec3_t & b, float t)
+	{
+		return {.x = a.x + t * (b.x - a.x), .y = a.y + t * (b.y - a.y), .z = a.z + t * (b.z - a.z)};
+	}
 };
 
 // This handles cases where the float is on the left side.
@@ -54,7 +59,6 @@ float vec2_cross(vec2_t a, vec2_t b);
 void vec2_normalize(vec2_t * v);
 // Vector 3D functions
 vec3_t vec3_new(float x, float y, float z);
-vec3_t vec3_clone(vec3_t * v);
 float vec3_length(vec3_t v);
 vec3_t vec3_add(vec3_t a, vec3_t b);
 vec3_t vec3_sub(vec3_t a, vec3_t b);

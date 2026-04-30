@@ -316,7 +316,12 @@ void update()
 
 		// Create a polygon from the original transformed triangle to be clipped
 		polygon_t polygon = create_polygon_from_triangle(
-			vec3_from_vec4(transformed_vertices[0]), vec3_from_vec4(transformed_vertices[1]), vec3_from_vec4(transformed_vertices[2])
+			vec3_from_vec4(transformed_vertices[0]),
+			vec3_from_vec4(transformed_vertices[1]),
+			vec3_from_vec4(transformed_vertices[2]),
+			mesh_face.a_uv,
+			mesh_face.b_uv,
+			mesh_face.c_uv
 		);
 		// Clip the polygon and returns a new polygon with potential new vertices
 		clip_polygon(&polygon);
@@ -341,9 +346,7 @@ void update()
 			// Calculate the triangle color based on the light angle
 			uint32_t shading = light_apply_intensity(mesh_face.color, light_intensity_factor);
 
-			triangle_t triangle_to_render = {
-				.color = shading, .points = projected_points, .texcoords = {mesh_face.a_uv, mesh_face.b_uv, mesh_face.c_uv}
-			};
+			triangle_t triangle_to_render = {.color = shading, .points = projected_points, .texcoords = triangle.texcoords};
 			// Save the projected triangle in the array of triangles to render
 			triangles_to_render[num_triangles_to_render] = triangle_to_render;
 			num_triangles_to_render++;

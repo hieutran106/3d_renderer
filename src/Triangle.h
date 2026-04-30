@@ -18,7 +18,7 @@ struct face_t
 struct triangle_t
 {
 	std::array<vec4_t, 3> points;
-	tex2_t texcoords[3];
+	std::array<tex2_t, 3> texcoords;
 	uint32_t color;
 };
 
