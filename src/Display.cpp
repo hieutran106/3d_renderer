@@ -5,20 +5,21 @@
 enum cull_method cull_method;
 enum render_method render_method;
 
-SDL_Window * window = nullptr;
+static SDL_Window * window = nullptr;
 SDL_Renderer * renderer = nullptr;
-uint32_t * color_buffer = nullptr;
+static uint32_t * color_buffer = nullptr;
 float * z_buffer = nullptr;
-SDL_Texture * color_buffer_texture = nullptr;
-TTF_Font * font = nullptr;
+static SDL_Texture * color_buffer_texture = nullptr;
+static TTF_Font * font = nullptr;
 
 // Logical size
 int window_width = 1024;
 int window_height = 768;
 // Physical pixels
-int renderW = 0;
-int renderH = 0;
-float scale = 0;
+static int renderW = 0;
+static int renderH = 0;
+static float scale = 0;
+
 // Triangle to render
 int num_triangles_to_render = 0;
 triangle_t triangles_to_render[MAX_TRIANGLE_PER_MESH];
@@ -55,6 +56,11 @@ bool initialize_window()
 	SDLHelper::SetRenderSizeInPixels(window, &renderW, &renderH, &scale);
 	renderer = SDL_CreateRenderer(window, NULL);
 	SDL_SetRenderLogicalPresentation(renderer, window_width, window_height, SDL_LOGICAL_PRESENTATION_STRETCH);
+
+	color_buffer = new uint32_t[window_width * window_height];
+	color_buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
+	z_buffer = new float[window_width * window_height];
+
 	return true;
 }
 
@@ -74,10 +80,11 @@ void draw_grid()
 
 void draw_pixel(int x, int y, uint32_t color)
 {
-	if(x >= 0 && x < window_width && y >= 0 && y < window_height)
+	if(x < 0 || x >= window_width || y < 0 || y >= window_height)
 	{
-		color_buffer[y * window_width + x] = color;
+		return;
 	}
+	color_buffer[y * window_width + x] = color;
 }
 void draw_line(int x0, int y0, int x1, int y1, uint32_t color)
 {
@@ -188,24 +195,25 @@ void render_stats_text()
 
 void clear_color_buffer(uint32_t color)
 {
-	for(int y = 0; y < window_height; y++)
+	for(int i = 0; i < window_width * window_height; i++)
 	{
-		for(int x = 0; x < window_width; x++)
-		{
-			color_buffer[y * window_width + x] = color;
-		}
+		color_buffer[i] = color;
 	}
 }
 void clear_z_buffer()
 {
-	for(int y = 0; y < window_height; y++)
+	for(int i = 0; i < window_width * window_height; i++)
 	{
-		for(int x = 0; x < window_width; x++)
-		{
-			z_buffer[y * window_width + x] = 1.0f;
-		}
+		z_buffer[i] = 1.0f;
 	}
 }
+
+void free_display_resource()
+{
+	delete[] color_buffer;
+	delete[] z_buffer;
+}
+
 void destroy_window()
 {
 	SDL_DestroyRenderer(renderer);

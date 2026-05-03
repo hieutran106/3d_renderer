@@ -135,9 +135,9 @@ void setup()
 
 	helper::setupMeshRotation(mesh_rotation, 0.0, 0.0, 0.0);
 
-	color_buffer = new uint32_t[window_width * window_height];
-	color_buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
-	z_buffer = new float[window_width * window_height];
+	// color_buffer = new uint32_t[window_width * window_height];
+	// color_buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
+	// z_buffer = new float[window_width * window_height];
 
 	// Initialize the perspective projection matrix
 	float aspecty = static_cast<float>(window_height) / window_width;
@@ -446,8 +446,7 @@ void render()
 
 void free_resource()
 {
-	delete[] color_buffer;
-	delete[] z_buffer;
+	free_display_resource();
 	upng_free(png_texture);
 	array_free(mesh.faces);
 	array_free(mesh.vertices);
@@ -457,7 +456,6 @@ int main(int argc, char * argv[])
 {
 	PROFILE_FUNCTION();
 	SDL_SetLogPriorities(SDL_LOG_PRIORITY_INFO);
-	// SDL_SetLogPriority(MY_LOG_OBJ, SDL_LOG_PRIORITY_DEBUG);
 	is_running = initialize_window();
 	setup();
 

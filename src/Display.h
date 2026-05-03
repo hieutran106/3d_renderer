@@ -28,20 +28,17 @@ extern render_method render_method;
 
 extern bool is_running;
 extern bool is_paused;
-extern SDL_Window * window;
+
 extern SDL_Renderer * renderer;
-extern uint32_t * color_buffer;
 extern float * z_buffer;
-extern SDL_Texture * color_buffer_texture;
-extern TTF_Font * font;
 
 // Logical size
 extern int window_width;
 extern int window_height;
 // Physical pixels
-extern int renderW;
-extern int renderH;
-extern float scale;
+// extern int renderW;
+// extern int renderH;
+// extern float scale;
 
 // Triangle to render
 constexpr int MAX_TRIANGLE_PER_MESH = 1000;
@@ -59,4 +56,5 @@ void render_color_buffer();
 void render_stats_text();
 void clear_color_buffer(uint32_t color);
 void clear_z_buffer();
+void free_display_resource();
 void destroy_window();
