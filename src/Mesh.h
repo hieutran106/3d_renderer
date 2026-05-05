@@ -8,13 +8,11 @@ struct mesh_t
 {
 	std::vector<vec3_t> vertices; // Dynamic array of vertices
 	std::vector<face_t> faces;
-
+	upng_t * texture;
 	vec3_t rotation;
 	vec3_t scale; // Scale with x,y, and z
 	vec3_t translation;
 };
 
-extern mesh_t mesh;
-
-void load_cube_mesh_data();
 void load_obj_file_data(const char * filename);
+void load_mesh(const char * obj_filename, const char * png_filename, vec3_t scale, vec3_t translation, vec3_t rotation);

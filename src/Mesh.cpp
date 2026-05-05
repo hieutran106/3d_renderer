@@ -3,15 +3,11 @@
 #include "Logger.h"
 #include <SDL3/SDL.h>
 
-mesh_t mesh = {
-	.vertices = {},
-	.faces = {},
-	.rotation = {0, 0, 0},
-	.scale = {1.0, 1.0, 1.0},
-	.translation = {0, 0, 0}
-};
+constexpr int MAX_NUM_MESHES = 10;
+static std::array<mesh_t, MAX_NUM_MESHES> meshes;
+static int mesh_count = 0;
 
-void load_obj_file_data(const char * filename)
+void load_mesh_obj_data(mesh_t & mesh, const char * filename)
 {
 	FILE * file;
 	file = fopen(filename, "r");
@@ -66,4 +62,29 @@ void load_obj_file_data(const char * filename)
 			mesh.faces.push_back(face);
 		}
 	}
+}
+
+void load_mesh_png_data(mesh_t & mesh, const char * filename)
+{
+	upng_t * png_image = upng_new_from_file(filename);
+	if(png_image != nullptr)
+	{
+		upng_decode(png_image);
+		if(upng_get_error(png_image) == UPNG_EOK)
+		{
+			mesh.texture = png_image;
+		}
+	}
+}
+
+void load_mesh(const char * obj_filename, const char * png_filename, vec3_t scale, vec3_t translation, vec3_t rotation)
+{
+	mesh_t & mesh = meshes[mesh_count];
+	load_mesh_obj_data(mesh, obj_filename);
+	load_mesh_png_data(mesh, png_filename);
+
+	mesh.scale = scale;
+	mesh.translation = translation;
+	mesh.rotation = rotation;
+	mesh_count++;
 }
