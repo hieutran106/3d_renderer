@@ -95,7 +95,6 @@ void updateMeshAnimation(mesh_t & mesh, float deltaTime)
 	if(rotate_x)
 	{
 		mesh.rotation.x += 1.0 * deltaTime;
-		// SDL_Log("Rotate x")
 	}
 	if(rotate_y)
 	{
@@ -157,10 +156,10 @@ void setup()
 	init_frustum_planes(fov_x_radians, fov_y_radians, z_near, z_far);
 
 	// load_cube_mesh_data();
-	load_obj_file_data("../assets/cube.obj");
+	load_obj_file_data("../assets/f117.obj");
 
 	// Load the texture information from an external PNG file
-	load_png_texture_data("../assets/cube.png");
+	load_png_texture_data("../assets/f117.png");
 }
 
 void process_input()
@@ -212,29 +211,29 @@ void process_input()
 			}
 			else if(event.key.key == SDLK_W)
 			{
-				camera.forward_velocity = vec3_mul(camera.direction, 8.0 * deltaTimeMs);
-				camera.position = camera.position + camera.forward_velocity;
+				rotate_camera_pitch(3.0 * deltaTimeMs);
 			}
 			else if(event.key.key == SDLK_S)
 			{
-				camera.forward_velocity = vec3_mul(camera.direction, 8.0 * deltaTimeMs);
-				camera.position = camera.position - camera.forward_velocity;
+				rotate_camera_pitch(-3.0 * deltaTimeMs);
 			}
-			else if(event.key.key == SDLK_A)
+			else if(event.key.key == SDLK_RIGHT)
 			{
-				camera.yaw += 1.0 * deltaTimeMs;
+				rotate_camera_yaw(1.0 * deltaTimeMs);
 			}
-			else if(event.key.key == SDLK_D)
+			else if(event.key.key == SDLK_LEFT)
 			{
-				camera.yaw -= 1.0 * deltaTimeMs;
+				rotate_camera_yaw(-1.0 * deltaTimeMs);
 			}
 			else if(event.key.key == SDLK_UP)
 			{
-				camera.position.y += 8.0 * deltaTimeMs;
+				update_camera_forward_velocity(vec3_mul(get_camera_direction(), 5.0 * deltaTimeMs));
+				update_camera_position(vec3_add(get_camera_position(), get_camera_forward_velocity()));
 			}
 			else if(event.key.key == SDLK_DOWN)
 			{
-				camera.position.y -= 8.0 * deltaTimeMs;
+				update_camera_forward_velocity(vec3_mul(get_camera_direction(), 5.0 * deltaTimeMs));
+				update_camera_position(vec3_sub(get_camera_position(), get_camera_forward_velocity()));
 			}
 			break;
 	}
@@ -266,15 +265,10 @@ void update()
 
 	helper::updateMeshAnimation(mesh, deltaTimeMs);
 
-	// TODO: compute the camera for the camera movement
+	// Update camera look at target to create view matrix
+	vec3_t target = get_camera_lookat_target();
 	vec3_t up_direction = {0, 1, 0};
-
-	vec3_t target = {0, 0, 1};
-	mat4_t camera_yaw_rotation = mat4_make_rotation_y(camera.yaw);
-	camera.direction = vec3_from_vec4(mat4_mul_vec4(camera_yaw_rotation, vec4_from_vec3(target)));
-
-	target = camera.position + camera.direction;
-	view_matrix = mat4_look_at(camera.position, target, up_direction);
+	view_matrix = mat4_look_at(get_camera_position(), target, up_direction);
 
 	mat4_t world_matrix = helper::initializeTransformationMatrix(mesh);
 
