@@ -94,15 +94,16 @@ void updateMeshAnimation(mesh_t & mesh, float deltaTime)
 {
 	if(rotate_x)
 	{
-		mesh.rotation.x += mesh_rotation.x * deltaTime;
+		mesh.rotation.x += 1.0 * deltaTime;
+		// SDL_Log("Rotate x")
 	}
 	if(rotate_y)
 	{
-		mesh.rotation.y += mesh_rotation.y * deltaTime;
+		mesh.rotation.y += 1.0 * deltaTime;
 	}
 	if(rotate_z)
 	{
-		mesh.rotation.z += mesh_rotation.z * deltaTime;
+		mesh.rotation.z += 1.0 * deltaTime;
 	}
 	mesh.translation.z = 6;
 }
@@ -135,9 +136,9 @@ void setup()
 
 	helper::setupMeshRotation(mesh_rotation, 0.0, 0.0, 0.0);
 
-	// color_buffer = new uint32_t[window_width * window_height];
-	// color_buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
-	// z_buffer = new float[window_width * window_height];
+	// Initialize the scene light direction
+	vec3_t light_direction = {0, 0, 1};
+	init_light(light_direction);
 
 	// Initialize the perspective projection matrix
 	float aspecty = static_cast<float>(window_height) / window_width;
@@ -341,7 +342,7 @@ void update()
 			////////////////////////////////////////////////////////////////////////////////////////////////
 			/// Flat shading and light
 			// Calculate the shade intensity based on how aligned is the face normal and the opposite of the light direction
-			float light_intensity_factor = -vec3_dot(normal, light.direction);
+			float light_intensity_factor = -vec3_dot(normal, get_light_direction());
 
 			// Calculate the triangle color based on the light angle
 			uint32_t shading = light_apply_intensity(mesh_face.color, light_intensity_factor);

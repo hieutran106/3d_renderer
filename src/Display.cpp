@@ -13,8 +13,8 @@ static SDL_Texture * color_buffer_texture = nullptr;
 static TTF_Font * font = nullptr;
 
 // Logical size
-int window_width = 1024;
-int window_height = 768;
+int window_width = 640;
+int window_height = 480;
 // Physical pixels
 static int renderW = 0;
 static int renderH = 0;
