@@ -32,13 +32,18 @@ void draw_triangle_pixel(int x, int y, uint32_t color, vec4_t point_a, vec4_t po
 	interpolated_reciprocal_w = 1.0 - interpolated_reciprocal_w;
 
 	// Only draw the pixel if the depth value is less than the one previously stored in the z-buffer
-	if(interpolated_reciprocal_w < z_buffer[(window_width * y) + x])
+	int zBufferIndex = (window_width * y) + x;
+	if(zBufferIndex >= window_width * window_height)
+	{
+		return;
+	}
+	if(interpolated_reciprocal_w < z_buffer[zBufferIndex])
 	{
 		// Draw a pixel at position (x,y) with a solid color
 		draw_pixel(x, y, color);
 
 		// Update the z-buffer value with the 1/w of this current pixel
-		z_buffer[(window_width * y) + x] = interpolated_reciprocal_w;
+		z_buffer[zBufferIndex] = interpolated_reciprocal_w;
 	}
 }
 }
@@ -171,6 +176,11 @@ void draw_texel(int x, int y, const uint32_t * texture, vec4_t point_a, vec4_t p
 	float beta = weights.y;
 	float gamma = weights.z;
 
+	if(std::isnan(alpha) || std::isinf(alpha))
+	{
+		return;
+	}
+
 	// Variables to store the interpolated values of U, V, and also 1/w for the current pixel
 	float interpolated_u;
 	float interpolated_v;
@@ -200,12 +210,16 @@ void draw_texel(int x, int y, const uint32_t * texture, vec4_t point_a, vec4_t p
 	interpolated_reciprocal_w = 1.0 - interpolated_reciprocal_w;
 	// Only draw the pixel if the depth value is less than the one previously drawn,
 	// z_buffer value range from 0.0 (near) -> 1.0 (far)
-	auto test = y * window_width + x;
-	int h = 0;
-	if(interpolated_reciprocal_w < z_buffer[y * window_width + x])
+	int zBufferIndex = y * window_width + x;
+	if(zBufferIndex >= window_width * window_height)
+	{
+		return;
+	}
+
+	if(interpolated_reciprocal_w < z_buffer[zBufferIndex])
 	{
 		draw_pixel(x, y, texture[colorIndex]);
-		z_buffer[y * window_width + x] = interpolated_reciprocal_w;
+		z_buffer[zBufferIndex] = interpolated_reciprocal_w;
 	}
 }
 

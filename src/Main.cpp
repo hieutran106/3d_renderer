@@ -227,12 +227,12 @@ void process_input()
 			}
 			else if(event.key.key == SDLK_UP)
 			{
-				update_camera_forward_velocity(vec3_mul(get_camera_direction(), 5.0 * deltaTimeMs));
+				update_camera_forward_velocity(vec3_mul(get_camera_direction(), 10.0 * deltaTimeMs));
 				update_camera_position(vec3_add(get_camera_position(), get_camera_forward_velocity()));
 			}
 			else if(event.key.key == SDLK_DOWN)
 			{
-				update_camera_forward_velocity(vec3_mul(get_camera_direction(), 5.0 * deltaTimeMs));
+				update_camera_forward_velocity(vec3_mul(get_camera_direction(), 10.0 * deltaTimeMs));
 				update_camera_position(vec3_sub(get_camera_position(), get_camera_forward_velocity()));
 			}
 			break;
