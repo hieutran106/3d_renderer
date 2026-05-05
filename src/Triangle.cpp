@@ -164,7 +164,7 @@ void draw_filled_triangle(int x0, int y0, float z0, float w0, int x1, int y1, fl
 	}
 }
 
-void draw_texel(int x, int y, const uint32_t * texture, vec4_t point_a, vec4_t point_b, vec4_t point_c, tex2_t a_uv, tex2_t b_uv, tex2_t c_uv)
+void draw_texel(int x, int y, upng_t * texture, vec4_t point_a, vec4_t point_b, vec4_t point_c, tex2_t a_uv, tex2_t b_uv, tex2_t c_uv)
 {
 	vec2_t point_p = {static_cast<float>(x), static_cast<float>(y)};
 	vec2_t a = vec2_from_vec4(point_a);
@@ -200,6 +200,9 @@ void draw_texel(int x, int y, const uint32_t * texture, vec4_t point_a, vec4_t p
 	// Map the UV coordinate to the full texture width and height
 	// tex_x can go out of range whenever interpolated_u is not guaranteed to stay in [0, 1)
 	// Floating-point precision + Rounding behavior
+	int texture_width = upng_get_width(texture);
+	int texture_height = upng_get_height(texture);
+	uint32_t * i32_texture = (uint32_t *)upng_get_buffer(texture);
 	interpolated_v = 1.0 - interpolated_v;
 	int tex_x = std::clamp(static_cast<int>(interpolated_u * texture_width), 0, texture_width - 1);
 	int tex_y = std::clamp(static_cast<int>(interpolated_v * texture_height), 0, texture_height - 1);
@@ -218,7 +221,7 @@ void draw_texel(int x, int y, const uint32_t * texture, vec4_t point_a, vec4_t p
 
 	if(interpolated_reciprocal_w < z_buffer[zBufferIndex])
 	{
-		draw_pixel(x, y, texture[colorIndex]);
+		draw_pixel(x, y, i32_texture[colorIndex]);
 		z_buffer[zBufferIndex] = interpolated_reciprocal_w;
 	}
 }
@@ -263,7 +266,7 @@ void draw_textured_triangle(
 	float w2,
 	float u2,
 	float v2,
-	const uint32_t * texture
+	upng_t * texture
 )
 {
 	// We need to sort the vertices by y-coordinate ascending (y0 < y1 < y2)

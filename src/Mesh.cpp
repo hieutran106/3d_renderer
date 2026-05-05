@@ -88,3 +88,21 @@ void load_mesh(const char * obj_filename, const char * png_filename, vec3_t scal
 	mesh.rotation = rotation;
 	mesh_count++;
 }
+
+int get_num_meshes()
+{
+	return mesh_count;
+}
+mesh_t & get_mesh(int index)
+{
+	return meshes[index];
+}
+
+void free_meshes_resource()
+{
+	for(int i = 0; i < mesh_count; i++)
+	{
+		const auto & m = meshes[i];
+		upng_free(m.texture);
+	}
+}

@@ -153,13 +153,8 @@ void setup()
 	// -- Initialize frustum planes with a point and normal
 	init_frustum_planes(fov_x_radians, fov_y_radians, z_near, z_far);
 
-	// // load_cube_mesh_data();
-	// load_obj_file_data("../assets/f117.obj");
-	//
-	// // Load the texture information from an external PNG file
-	// load_png_texture_data("../assets/f117.png");
-	load_mesh("./assets/f117.obj", "./assets/f117.png", vec3_new(1, 1, 1), vec3_new(-3, 0, 0), vec3_new(0, 0, 0));
-	load_mesh("./assets/efa.obj", "./assets/efa.png", vec3_new(1, 1, 1), vec3_new(3, 0, 0), vec3_new(0, 0, 0));
+	load_mesh("../assets/f117.obj", "../assets/f117.png", vec3_new(1, 1, 1), vec3_new(-3, 0, 8), vec3_new(0, 0, 0));
+	load_mesh("../assets/efa.obj", "../assets/efa.png", vec3_new(1, 1, 1), vec3_new(3, 0, 8), vec3_new(0, 0, 0));
 }
 
 void process_input()
@@ -246,7 +241,7 @@ void update()
 	deltaTime = current_time - previous_frame_time;
 	int time_to_wait = FRAME_TARGET_TIME - deltaTime;
 
-	SDL_LogDebug(MY_LOG_RENDER, "deltaTime=%d time_to_wait=%d", deltaTime, time_to_wait);
+	SDL_LogDebug(MY_LOG_RENDER, "deltaTime=%llu time_to_wait=%d", deltaTime, time_to_wait);
 
 	if(time_to_wait > 0)
 	{
@@ -263,88 +258,91 @@ void update()
 	// Initialize the counter of triangles to render for the current frame
 	num_triangles_to_render = 0;
 
-	helper::updateMeshAnimation(mesh, deltaTimeMs);
-
 	// Update camera look at target to create view matrix
 	vec3_t target = get_camera_lookat_target();
 	vec3_t up_direction = {0, 1, 0};
 	view_matrix = mat4_look_at(get_camera_position(), target, up_direction);
 
-	mat4_t world_matrix = helper::initializeTransformationMatrix(mesh);
-
-	int num_faces = mesh.faces.size();
-	for(int i = 0; i < num_faces; i++)
+	for(int mesh_index = 0; mesh_index < get_num_meshes(); mesh_index++)
 	{
-		// if(i != 4)
-		// 	continue;
-		const face_t & mesh_face = mesh.faces[i];
+		mesh_t & mesh = get_mesh(mesh_index);
+		helper::updateMeshAnimation(mesh, deltaTimeMs);
+		mat4_t world_matrix = helper::initializeTransformationMatrix(mesh);
 
-		const vec3_t face_vertices[3] = {mesh.vertices[mesh_face.a - 1], mesh.vertices[mesh_face.b - 1], mesh.vertices[mesh_face.c - 1]};
-
-		std::array<vec4_t, 3> transformed_vertices;
-		// Loop all three vertices of this current face and apply transformation
-		for(int j = 0; j < 3; j++)
+		int num_faces = mesh.faces.size();
+		for(int i = 0; i < num_faces; i++)
 		{
-			vec4_t transformed_vertex = vec4_from_vec3(face_vertices[j]);
-			transformed_vertex = mat4_mul_vec4(world_matrix, transformed_vertex);
-			// Transform the world space to camera space
-			transformed_vertex = mat4_mul_vec4(view_matrix, transformed_vertex);
-			transformed_vertices[j] = transformed_vertex;
-		}
+			// if(i != 4)
+			// 	continue;
+			const face_t & mesh_face = mesh.faces[i];
 
-		vec3_t normal = helper::getFaceNormalVector(transformed_vertices);
-		// Check backface culling test to see if the current face should be projected
-		if(cull_method == CULL_BACKFACE)
-		{
-			vec3_t vector_a = vec3_from_vec4(transformed_vertices[0]);
-			// Find the vector between a point in the triangle and the camera origin
-			vec3_t origin = {0, 0, 0};
-			vec3_t camera_ray = origin - vector_a;
+			const vec3_t face_vertices[3] = {mesh.vertices[mesh_face.a - 1], mesh.vertices[mesh_face.b - 1], mesh.vertices[mesh_face.c - 1]};
 
-			// Calculate how aligned the camera ray is with the face normal (Using dot product)
-			auto culling = vec3_dot(normal, camera_ray);
-			if(culling < 0)
+			std::array<vec4_t, 3> transformed_vertices;
+			// Loop all three vertices of this current face and apply transformation
+			for(int j = 0; j < 3; j++)
 			{
-				continue;
+				vec4_t transformed_vertex = vec4_from_vec3(face_vertices[j]);
+				transformed_vertex = mat4_mul_vec4(world_matrix, transformed_vertex);
+				// Transform the world space to camera space
+				transformed_vertex = mat4_mul_vec4(view_matrix, transformed_vertex);
+				transformed_vertices[j] = transformed_vertex;
 			}
-		}
 
-		// Create a polygon from the original transformed triangle to be clipped
-		polygon_t polygon = create_polygon_from_triangle(
-			vec3_from_vec4(transformed_vertices[0]),
-			vec3_from_vec4(transformed_vertices[1]),
-			vec3_from_vec4(transformed_vertices[2]),
-			mesh_face.a_uv,
-			mesh_face.b_uv,
-			mesh_face.c_uv
-		);
-		// Clip the polygon and returns a new polygon with potential new vertices
-		clip_polygon(&polygon);
+			vec3_t normal = helper::getFaceNormalVector(transformed_vertices);
+			// Check backface culling test to see if the current face should be projected
+			if(cull_method == CULL_BACKFACE)
+			{
+				vec3_t vector_a = vec3_from_vec4(transformed_vertices[0]);
+				// Find the vector between a point in the triangle and the camera origin
+				vec3_t origin = {0, 0, 0};
+				vec3_t camera_ray = origin - vector_a;
 
-		std::array<triangle_t, MAX_NUM_POLY_TRIANGLES> triangles_after_clipping;
-		int num_triangles_after_clipping = 0;
+				// Calculate how aligned the camera ray is with the face normal (Using dot product)
+				auto culling = vec3_dot(normal, camera_ray);
+				if(culling < 0)
+				{
+					continue;
+				}
+			}
 
-		triangles_from_polygon(&polygon, triangles_after_clipping, num_triangles_after_clipping);
+			// Create a polygon from the original transformed triangle to be clipped
+			polygon_t polygon = create_polygon_from_triangle(
+				vec3_from_vec4(transformed_vertices[0]),
+				vec3_from_vec4(transformed_vertices[1]),
+				vec3_from_vec4(transformed_vertices[2]),
+				mesh_face.a_uv,
+				mesh_face.b_uv,
+				mesh_face.c_uv
+			);
+			// Clip the polygon and returns a new polygon with potential new vertices
+			clip_polygon(&polygon);
 
-		for(int t = 0; t < num_triangles_after_clipping; t++)
-		{
-			triangle_t triangle = triangles_after_clipping[t];
-			auto triangle_points = triangle.points;
-			// Loop all three vertices to perform a projection
-			std::array<vec4_t, 3> projected_points = helper::projectTriangle(projection_matrix, triangle_points);
+			std::array<triangle_t, MAX_NUM_POLY_TRIANGLES> triangles_after_clipping;
+			int num_triangles_after_clipping = 0;
 
-			////////////////////////////////////////////////////////////////////////////////////////////////
-			/// Flat shading and light
-			// Calculate the shade intensity based on how aligned is the face normal and the opposite of the light direction
-			float light_intensity_factor = -vec3_dot(normal, get_light_direction());
+			triangles_from_polygon(&polygon, triangles_after_clipping, num_triangles_after_clipping);
 
-			// Calculate the triangle color based on the light angle
-			uint32_t shading = light_apply_intensity(mesh_face.color, light_intensity_factor);
+			for(int t = 0; t < num_triangles_after_clipping; t++)
+			{
+				triangle_t triangle = triangles_after_clipping[t];
+				auto triangle_points = triangle.points;
+				// Loop all three vertices to perform a projection
+				std::array<vec4_t, 3> projected_points = helper::projectTriangle(projection_matrix, triangle_points);
 
-			triangle_t triangle_to_render = {.color = shading, .points = projected_points, .texcoords = triangle.texcoords};
-			// Save the projected triangle in the array of triangles to render
-			triangles_to_render[num_triangles_to_render] = triangle_to_render;
-			num_triangles_to_render++;
+				////////////////////////////////////////////////////////////////////////////////////////////////
+				/// Flat shading and light
+				// Calculate the shade intensity based on how aligned is the face normal and the opposite of the light direction
+				float light_intensity_factor = -vec3_dot(normal, get_light_direction());
+
+				// Calculate the triangle color based on the light angle
+				uint32_t shading = light_apply_intensity(mesh_face.color, light_intensity_factor);
+
+				triangle_t triangle_to_render = {.color = shading, .points = projected_points, .texcoords = triangle.texcoords, .texture = mesh.texture};
+				// Save the projected triangle in the array of triangles to render
+				triangles_to_render[num_triangles_to_render] = triangle_to_render;
+				num_triangles_to_render++;
+			}
 		}
 	}
 }
@@ -404,7 +402,8 @@ void render_scene_to_buffer()
 				points[2].w,
 				texcoords[2].u,
 				texcoords[2].v,
-				mesh_texture
+				triangle.texture
+				// mesh_texture
 			);
 		}
 		// Draw triangle wireframe
@@ -442,9 +441,7 @@ void render()
 void free_resource()
 {
 	free_display_resource();
-	upng_free(png_texture);
-	// array_free(mesh.faces);
-	// array_free(mesh.vertices);
+	free_meshes_resource();
 }
 
 int main(int argc, char * argv[])
