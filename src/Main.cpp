@@ -263,17 +263,14 @@ void update()
 	vec3_t up_direction = {0, 1, 0};
 	view_matrix = mat4_look_at(get_camera_position(), target, up_direction);
 
-	for(int mesh_index = 0; mesh_index < get_num_meshes(); mesh_index++)
+	for(mesh_t & mesh : get_meshes())
 	{
-		mesh_t & mesh = get_mesh(mesh_index);
 		helper::updateMeshAnimation(mesh, deltaTimeMs);
 		mat4_t world_matrix = helper::initializeTransformationMatrix(mesh);
 
 		int num_faces = mesh.faces.size();
 		for(int i = 0; i < num_faces; i++)
 		{
-			// if(i != 4)
-			// 	continue;
 			const face_t & mesh_face = mesh.faces[i];
 
 			const vec3_t face_vertices[3] = {mesh.vertices[mesh_face.a - 1], mesh.vertices[mesh_face.b - 1], mesh.vertices[mesh_face.c - 1]};
@@ -448,6 +445,7 @@ int main(int argc, char * argv[])
 {
 	PROFILE_FUNCTION();
 	SDL_SetLogPriorities(SDL_LOG_PRIORITY_INFO);
+	SDL_SetAppMetadata("3D renderer", "1.2.0", "com.ht.3d-renderer");
 	is_running = initialize_window();
 	setup();
 

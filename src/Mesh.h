@@ -17,6 +17,6 @@ struct mesh_t
 
 void load_obj_file_data(const char * filename);
 void load_mesh(const char * obj_filename, const char * png_filename, vec3_t scale, vec3_t translation, vec3_t rotation);
-int get_num_meshes();
-mesh_t & get_mesh(int index);
+
 void free_meshes_resource();
+std::vector<mesh_t> & get_meshes();

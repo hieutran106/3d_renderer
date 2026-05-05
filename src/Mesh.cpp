@@ -3,9 +3,7 @@
 #include "Logger.h"
 #include <SDL3/SDL.h>
 
-constexpr int MAX_NUM_MESHES = 10;
-static std::array<mesh_t, MAX_NUM_MESHES> meshes;
-static int mesh_count = 0;
+static std::vector<mesh_t> meshes;
 
 void load_mesh_obj_data(mesh_t & mesh, const char * filename)
 {
@@ -79,30 +77,26 @@ void load_mesh_png_data(mesh_t & mesh, const char * filename)
 
 void load_mesh(const char * obj_filename, const char * png_filename, vec3_t scale, vec3_t translation, vec3_t rotation)
 {
-	mesh_t & mesh = meshes[mesh_count];
+	mesh_t mesh;
 	load_mesh_obj_data(mesh, obj_filename);
 	load_mesh_png_data(mesh, png_filename);
 
 	mesh.scale = scale;
 	mesh.translation = translation;
 	mesh.rotation = rotation;
-	mesh_count++;
-}
 
-int get_num_meshes()
-{
-	return mesh_count;
-}
-mesh_t & get_mesh(int index)
-{
-	return meshes[index];
+	meshes.push_back(mesh);
 }
 
 void free_meshes_resource()
 {
-	for(int i = 0; i < mesh_count; i++)
+	for(const auto & m : meshes)
 	{
-		const auto & m = meshes[i];
 		upng_free(m.texture);
 	}
+}
+
+std::vector<mesh_t> & get_meshes()
+{
+	return meshes;
 }
