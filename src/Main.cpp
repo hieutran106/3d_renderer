@@ -1,4 +1,3 @@
-#include "Array.h"
 #include "Camera.h"
 #include "Clipping.h"
 #include "Display.h"
@@ -11,7 +10,6 @@
 #include "Vector.h"
 #include <numbers>
 #include <stdlib.h>
-#include <string>
 
 bool is_running = false;
 bool is_paused = false;
@@ -272,7 +270,7 @@ void update()
 
 	mat4_t world_matrix = helper::initializeTransformationMatrix(mesh);
 
-	int num_faces = array_length(mesh.faces);
+	int num_faces = mesh.faces.size();
 	for(int i = 0; i < num_faces; i++)
 	{
 		// if(i != 4)
@@ -443,8 +441,8 @@ void free_resource()
 {
 	free_display_resource();
 	upng_free(png_texture);
-	array_free(mesh.faces);
-	array_free(mesh.vertices);
+	// array_free(mesh.faces);
+	// array_free(mesh.vertices);
 }
 
 int main(int argc, char * argv[])
