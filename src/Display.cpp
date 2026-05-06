@@ -1,5 +1,8 @@
 #include "Display.h"
 #include "SDLHelper.h"
+#include "backends/imgui_impl_sdl3.h"
+#include "backends/imgui_impl_sdlrenderer3.h"
+#include "imgui.h"
 #include <format>
 
 enum cull_method cull_method;
@@ -24,6 +27,29 @@ static float scale = 0;
 int num_triangles_to_render = 0;
 triangle_t triangles_to_render[MAX_TRIANGLE_PER_MESH];
 Uint64 deltaTime = 0;
+
+bool initialize_imgui(SDL_Renderer * renderer, SDL_Window * window)
+{
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+
+	ImGuiIO & io = ImGui::GetIO();
+	// io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+
+	ImGui::StyleColorsDark();
+
+	if(!ImGui_ImplSDL3_InitForSDLRenderer(window, renderer))
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Error initializing ImGui");
+		return false;
+	}
+	if(!ImGui_ImplSDLRenderer3_Init(renderer))
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Error initializing ImGui ImGui_ImplSDLRenderer3_Init");
+		return false;
+	}
+	return true;
+}
 
 bool initialize_window()
 {
@@ -61,6 +87,10 @@ bool initialize_window()
 	color_buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
 	z_buffer = new float[window_width * window_height];
 
+	if(!initialize_imgui(renderer, window))
+	{
+		return false;
+	}
 	return true;
 }
 
@@ -216,8 +246,17 @@ void free_display_resource()
 
 void destroy_window()
 {
+	destroy_imgui();
+
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
 	TTF_Quit();
 	SDL_Quit();
+}
+
+void destroy_imgui()
+{
+	ImGui_ImplSDLRenderer3_Shutdown();
+	ImGui_ImplSDL3_Shutdown();
+	ImGui::DestroyContext();
 }

@@ -11,6 +11,10 @@
 #include <numbers>
 #include <stdlib.h>
 
+#include "backends/imgui_impl_sdl3.h"
+#include "backends/imgui_impl_sdlrenderer3.h"
+#include "imgui.h"
+
 bool is_running = false;
 bool is_paused = false;
 
@@ -161,76 +165,79 @@ void process_input()
 {
 	float deltaTimeMs = static_cast<float>(deltaTime) / 1000.0f;
 	SDL_Event event;
-	SDL_PollEvent(&event);
-	switch(event.type)
+	while(SDL_PollEvent(&event))
 	{
-		case SDL_EVENT_QUIT:
-			is_running = false;
-			break;
-		case SDL_EVENT_KEY_DOWN:
-			if(event.key.key == SDLK_ESCAPE)
-			{
+		ImGui_ImplSDL3_ProcessEvent(&event);
+		switch(event.type)
+		{
+			case SDL_EVENT_QUIT:
 				is_running = false;
-			}
-			else if(event.key.key == SDLK_1)
-			{
-				render_method = render_method == RENDER_WIRE_VERTEX ? RENDER_WIRE : RENDER_WIRE_VERTEX;
-			}
-			else if(event.key.key == SDLK_2)
-			{
-				render_method = render_method == RENDER_FILL_TRIANGLE ? RENDER_FILL_TRIANGLE_WIRE : RENDER_FILL_TRIANGLE;
-			}
-			else if(event.key.key == SDLK_3)
-			{
-				render_method = render_method == RENDER_TEXTURED ? RENDER_TEXTURED_WIRE : RENDER_TEXTURED;
-			}
-			else if(event.key.key == SDLK_C)
-			{
-				cull_method = cull_method == CULL_BACKFACE ? CULL_NONE : CULL_BACKFACE;
-			}
-			else if(event.key.key == SDLK_SPACE)
-			{
-				is_paused = !is_paused;
-			}
-			else if(event.key.key == SDLK_X)
-			{
-				rotate_x = !rotate_x;
-			}
-			else if(event.key.key == SDLK_Y)
-			{
-				rotate_y = !rotate_y;
-			}
-			else if(event.key.key == SDLK_Z)
-			{
-				rotate_z = !rotate_z;
-			}
-			else if(event.key.key == SDLK_W)
-			{
-				rotate_camera_pitch(3.0 * deltaTimeMs);
-			}
-			else if(event.key.key == SDLK_S)
-			{
-				rotate_camera_pitch(-3.0 * deltaTimeMs);
-			}
-			else if(event.key.key == SDLK_RIGHT)
-			{
-				rotate_camera_yaw(1.0 * deltaTimeMs);
-			}
-			else if(event.key.key == SDLK_LEFT)
-			{
-				rotate_camera_yaw(-1.0 * deltaTimeMs);
-			}
-			else if(event.key.key == SDLK_UP)
-			{
-				update_camera_forward_velocity(vec3_mul(get_camera_direction(), 10.0 * deltaTimeMs));
-				update_camera_position(vec3_add(get_camera_position(), get_camera_forward_velocity()));
-			}
-			else if(event.key.key == SDLK_DOWN)
-			{
-				update_camera_forward_velocity(vec3_mul(get_camera_direction(), 10.0 * deltaTimeMs));
-				update_camera_position(vec3_sub(get_camera_position(), get_camera_forward_velocity()));
-			}
-			break;
+				break;
+			case SDL_EVENT_KEY_DOWN:
+				if(event.key.key == SDLK_ESCAPE)
+				{
+					is_running = false;
+				}
+				else if(event.key.key == SDLK_1)
+				{
+					render_method = render_method == RENDER_WIRE_VERTEX ? RENDER_WIRE : RENDER_WIRE_VERTEX;
+				}
+				else if(event.key.key == SDLK_2)
+				{
+					render_method = render_method == RENDER_FILL_TRIANGLE ? RENDER_FILL_TRIANGLE_WIRE : RENDER_FILL_TRIANGLE;
+				}
+				else if(event.key.key == SDLK_3)
+				{
+					render_method = render_method == RENDER_TEXTURED ? RENDER_TEXTURED_WIRE : RENDER_TEXTURED;
+				}
+				else if(event.key.key == SDLK_C)
+				{
+					cull_method = cull_method == CULL_BACKFACE ? CULL_NONE : CULL_BACKFACE;
+				}
+				else if(event.key.key == SDLK_SPACE)
+				{
+					is_paused = !is_paused;
+				}
+				else if(event.key.key == SDLK_X)
+				{
+					rotate_x = !rotate_x;
+				}
+				else if(event.key.key == SDLK_Y)
+				{
+					rotate_y = !rotate_y;
+				}
+				else if(event.key.key == SDLK_Z)
+				{
+					rotate_z = !rotate_z;
+				}
+				else if(event.key.key == SDLK_W)
+				{
+					rotate_camera_pitch(3.0 * deltaTimeMs);
+				}
+				else if(event.key.key == SDLK_S)
+				{
+					rotate_camera_pitch(-3.0 * deltaTimeMs);
+				}
+				else if(event.key.key == SDLK_RIGHT)
+				{
+					rotate_camera_yaw(1.0 * deltaTimeMs);
+				}
+				else if(event.key.key == SDLK_LEFT)
+				{
+					rotate_camera_yaw(-1.0 * deltaTimeMs);
+				}
+				else if(event.key.key == SDLK_UP)
+				{
+					update_camera_forward_velocity(vec3_mul(get_camera_direction(), 10.0 * deltaTimeMs));
+					update_camera_position(vec3_add(get_camera_position(), get_camera_forward_velocity()));
+				}
+				else if(event.key.key == SDLK_DOWN)
+				{
+					update_camera_forward_velocity(vec3_mul(get_camera_direction(), 10.0 * deltaTimeMs));
+					update_camera_position(vec3_sub(get_camera_position(), get_camera_forward_velocity()));
+				}
+				break;
+		}
 	}
 }
 
@@ -426,12 +433,27 @@ void render_scene_to_buffer()
 		}
 	}
 }
+
+void render_imgui(SDL_Renderer * renderer)
+{
+	ImGui_ImplSDLRenderer3_NewFrame();
+	ImGui_ImplSDL3_NewFrame();
+	ImGui::NewFrame();
+
+	// --- Your ImGui UI code goes here ---
+	ImGui::Begin("Hello, SDL3!");
+	ImGui::Text("This is some useful text.");
+	ImGui::End();
+	ImGui::Render();
+	ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
+}
 void render()
 {
 	PROFILE_FUNCTION();
 	render_scene_to_buffer();
 	render_color_buffer();
 	render_stats_text();
+	render_imgui(renderer);
 	SDL_RenderPresent(renderer);
 }
 

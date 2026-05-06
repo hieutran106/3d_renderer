@@ -58,3 +58,4 @@ void clear_color_buffer(uint32_t color);
 void clear_z_buffer();
 void free_display_resource();
 void destroy_window();
+void destroy_imgui();
