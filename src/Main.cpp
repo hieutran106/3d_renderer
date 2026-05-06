@@ -15,6 +15,15 @@
 #include "backends/imgui_impl_sdlrenderer3.h"
 #include "imgui.h"
 
+struct TouchControls
+{
+	bool up = false;
+	bool down = false;
+	// bool left = false;
+	// bool right = false;
+};
+TouchControls touch_controls;
+
 bool is_running = false;
 bool is_paused = false;
 
@@ -161,6 +170,17 @@ void setup()
 	load_mesh("../assets/efa.obj", "../assets/efa.png", vec3_new(1, 1, 1), vec3_new(3, 0, 8), vec3_new(0, 0, 0));
 }
 
+void move_camera_forward(float deltaTimeMs)
+{
+	update_camera_forward_velocity(vec3_mul(get_camera_direction(), 10.0 * deltaTimeMs));
+	update_camera_position(vec3_add(get_camera_position(), get_camera_forward_velocity()));
+}
+
+void move_camera_backward(float deltaTimeMs)
+{
+	update_camera_forward_velocity(vec3_mul(get_camera_direction(), 10.0f * deltaTimeMs));
+	update_camera_position(vec3_sub(get_camera_position(), get_camera_forward_velocity()));
+}
 void process_input()
 {
 	float deltaTimeMs = static_cast<float>(deltaTime) / 1000.0f;
@@ -228,13 +248,11 @@ void process_input()
 				}
 				else if(event.key.key == SDLK_UP)
 				{
-					update_camera_forward_velocity(vec3_mul(get_camera_direction(), 10.0 * deltaTimeMs));
-					update_camera_position(vec3_add(get_camera_position(), get_camera_forward_velocity()));
+					move_camera_forward(deltaTimeMs);
 				}
 				else if(event.key.key == SDLK_DOWN)
 				{
-					update_camera_forward_velocity(vec3_mul(get_camera_direction(), 10.0 * deltaTimeMs));
-					update_camera_position(vec3_sub(get_camera_position(), get_camera_forward_velocity()));
+					move_camera_backward(deltaTimeMs);
 				}
 				break;
 		}
@@ -440,10 +458,41 @@ void render_imgui(SDL_Renderer * renderer)
 	ImGui_ImplSDL3_NewFrame();
 	ImGui::NewFrame();
 
-	// --- Your ImGui UI code goes here ---
-	ImGui::Begin("Hello, SDL3!");
-	ImGui::Text("This is some useful text.");
-	ImGui::End();
+	// C. Draw UI
+	{
+		// Set the window flags to remove title bar, background, resizing, and make it transparent.
+		ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings
+									  | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove;
+
+		// Define the size of our button in LOGICAL space
+		const ImVec2 button_size = ImVec2(24, 24);
+
+		// --- CRITICAL POSITIONING CALCULATION ---
+		// Calculate the position based on the LOGICAL resolution, not the actual window pixel size.
+		// ImGui needs to know where in its coordinate system (0 to 640) to draw.
+		// We are using a simple hardcoded logical resolution, but a robust app
+		// might query SDL_GetRenderLogicalPresentation() to get the actual running logic size.
+
+		// Set the Next Window position using ImGui's absolute logical coordinates.
+		// We align it to the bottom-right (pivot 1.0f, 1.0f).
+		ImGui::SetNextWindowPos(ImVec2((float)window_width, (float)window_height), ImGuiCond_Always, ImVec2(1.0f, 1.0f));
+
+		// Set background color to transparent for this specific window
+		ImGui::SetNextWindowBgAlpha(0.0f);
+
+		// Begin a bare-bones window. If Begin returns true (window is visible), draw the button.
+		if(ImGui::Begin("##Overlay", nullptr, window_flags))
+		{
+			// Draw the simple button "^"
+			if(ImGui::Button("^", button_size))
+			{
+				SDL_Log("Arrow Button Clicked!");
+			}
+		}
+		ImGui::End();
+	}
+
+	// ImGui::End();
 	ImGui::Render();
 	ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
 }

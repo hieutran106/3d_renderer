@@ -34,6 +34,7 @@ bool initialize_imgui(SDL_Renderer * renderer, SDL_Window * window)
 	ImGui::CreateContext();
 
 	ImGuiIO & io = ImGui::GetIO();
+	io.FontGlobalScale = 2.0f;
 	// io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
 	ImGui::StyleColorsDark();
