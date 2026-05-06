@@ -46,6 +46,32 @@ function(link_sdl3_ttf_xc target_name)
     )
 endfunction()
 
+function(link_imgui target_name)
+    set(IMGUI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/imgui")
+    set(IMGUI_SOURCES
+            ${IMGUI_DIR}/imgui.cpp
+            ${IMGUI_DIR}/imgui_demo.cpp
+            ${IMGUI_DIR}/imgui_draw.cpp
+            ${IMGUI_DIR}/imgui_tables.cpp
+            ${IMGUI_DIR}/imgui_widgets.cpp
+            # Backends
+            ${IMGUI_DIR}/backends/imgui_impl_sdl3.cpp
+            ${IMGUI_DIR}/backends/imgui_impl_sdlrenderer3.cpp
+    )
+
+
+    message(STATUS "link_imgui:")
+    foreach (src IN LISTS IMGUI_SOURCES)
+        message(STATUS "    ${src}")
+    endforeach ()
+
+    target_include_directories(${target_name} PRIVATE
+            ${IMGUI_DIR}
+            ${IMGUI_DIR}/backends
+    )
+    target_sources(${target_name} PRIVATE ${IMGUI_SOURCES})
+endfunction()
+
 function(get_cpp_sources target_name result)
     file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/src/*.cpp")
     set(${result} ${SOURCES} PARENT_SCOPE)
@@ -60,6 +86,7 @@ get_cpp_sources(3d_renderer SOURCES)
 add_executable(3d_renderer ${SOURCES})
 link_sdl3_xc(3d_renderer)
 link_sdl3_ttf_xc(3d_renderer)
+link_imgui(3d_renderer)
 
 option(USE_SANITIZERS "Enable ASan and UBSan" ON)
 if (USE_SANITIZERS)
