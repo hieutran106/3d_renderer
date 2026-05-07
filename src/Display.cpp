@@ -185,7 +185,7 @@ void render_imgui()
 
 	ImGui::End();
 
-	ImGui::Begin("Debug Input");
+	ImGui::Begin("Debug Input", nullptr);
 	ImGui::Text("Mouse Position: %.1f, %.1f", io.MousePos.x, io.MousePos.y);
 	ImGui::Text("Display Size: %.1f, %.1f", io.DisplaySize.x, io.DisplaySize.y);
 	ImGui::Text("Framebuffer Scale: %.1f", io.DisplayFramebufferScale.x);

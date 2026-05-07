@@ -88,14 +88,14 @@ function(set_target_props target_name)
         set_target_properties(${target_name} PROPERTIES
                 MACOSX_BUNDLE TRUE
                 MACOSX_BUNDLE_BUNDLE_NAME "3d_renderer"
-                MACOSX_BUNDLE_GUI_IDENTIFIER "Boeing.bgs.vast.skia.1"
+                MACOSX_BUNDLE_GUI_IDENTIFIER "Boeing.bgs.vast.poc.3drenderer"
                 MACOSX_BUNDLE_BUNDLE_VERSION "1.0.0"
                 MACOSX_BUNDLE_SHORT_VERSION_STRING "1.0"
                 MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/ios/Info.plist.in
 
                 XCODE_ATTRIBUTE_PRODUCT_NAME "3d_renderer"
                 XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME "AppIcon"
-                XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "Boeing.bgs.vast.skia.1"
+                XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "Boeing.bgs.vast.poc.3drenderer"
                 XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "15.0"
                 XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2"
                 BUILD_WITH_INSTALL_RPATH TRUE
@@ -136,7 +136,7 @@ link_imgui(3d_renderer)
 
 set_target_props(3d_renderer)
 
-option(USE_SANITIZERS "Enable ASan and UBSan" ON)
+option(USE_SANITIZERS "Enable ASan and UBSan" OFF)
 if (USE_SANITIZERS)
     message(STATUS "Building with Address and Undefined Behavior Sanitizers")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address,undefined -fno-omit-frame-pointer")
