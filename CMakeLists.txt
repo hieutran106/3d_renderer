@@ -83,11 +83,49 @@ function(get_cpp_sources target_name result)
     endforeach ()
 endfunction()
 
+function(set_target_props target_name)
+    if (IOS)
+        set_target_properties(${target_name} PROPERTIES
+                MACOSX_BUNDLE TRUE
+                MACOSX_BUNDLE_BUNDLE_NAME "3d_renderer"
+                MACOSX_BUNDLE_GUI_IDENTIFIER "Boeing.bgs.vast.skia.1"
+                MACOSX_BUNDLE_BUNDLE_VERSION "1.0.0"
+                MACOSX_BUNDLE_SHORT_VERSION_STRING "1.0"
+                MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/ios/Info.plist.in
+
+                XCODE_ATTRIBUTE_PRODUCT_NAME "3d_renderer"
+                XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME "AppIcon"
+                XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "Boeing.bgs.vast.skia.1"
+                XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "15.0"
+                XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2"
+                BUILD_WITH_INSTALL_RPATH TRUE
+                INSTALL_RPATH "@executable_path/Frameworks"
+                XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/Frameworks"
+        )
+
+    endif ()
+endfunction()
+
+function(copy_asset target_name)
+    if (IOS)
+        add_custom_command(TARGET 3d_renderer POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_directory
+                "${CMAKE_SOURCE_DIR}/assets"
+                "$<TARGET_BUNDLE_DIR:3d_renderer>/assets"
+                COMMENT "Copying assets folder into iOS app bundle"
+        )
+        message(STATUS "Copy asset")
+    endif ()
+
+endfunction()
+
 get_cpp_sources(3d_renderer SOURCES)
 add_executable(3d_renderer ${SOURCES})
+
 link_sdl3_xc(3d_renderer)
-#link_sdl3_ttf_xc(3d_renderer)
 link_imgui(3d_renderer)
+
+set_target_props(3d_renderer)
 
 option(USE_SANITIZERS "Enable ASan and UBSan" ON)
 if (USE_SANITIZERS)
@@ -95,3 +133,5 @@ if (USE_SANITIZERS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address,undefined -fno-omit-frame-pointer")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address,undefined")
 endif ()
+
+copy_asset(3d_renderer)
