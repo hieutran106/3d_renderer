@@ -5,13 +5,11 @@
 #include "Logger.h"
 #include "Matrix.h"
 #include "Mesh.h"
-#include "Profiler/ProfileTimer.h"
-#include "Profiler/Profiler.h"
 #include "Vector.h"
+#include "backends/imgui_impl_sdl3.h"
+#include <SDL3/SDL_main.h>
 #include <numbers>
 #include <stdlib.h>
-
-#include "backends/imgui_impl_sdl3.h"
 
 bool is_running = false;
 
@@ -215,7 +213,6 @@ void process_input()
 
 void update()
 {
-	PROFILE_FUNCTION();
 	const auto current_time = SDL_GetTicks();
 	deltaTime = current_time - previous_frame_time;
 	int time_to_wait = FRAME_TARGET_TIME - deltaTime;
@@ -404,10 +401,9 @@ void render_scene_to_buffer()
 
 void render()
 {
-	PROFILE_FUNCTION();
 	render_scene_to_buffer();
 	render_color_buffer();
-	render_stats_text();
+	// render_stats_text();
 	render_imgui();
 	SDL_RenderPresent(renderer);
 }
@@ -420,7 +416,6 @@ void free_resource()
 
 int main(int argc, char * argv[])
 {
-	PROFILE_FUNCTION();
 	SDL_SetLogPriorities(SDL_LOG_PRIORITY_INFO);
 	is_running = initialize_window();
 	setup();

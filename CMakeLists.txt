@@ -5,11 +5,12 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 function(link_sdl3_xc target_name)
-    find_library(SDL3_FRAMEWORK
-            NAMES SDL3
-            PATHS "${CMAKE_SOURCE_DIR}/third_party/"
-            REQUIRED
-    )
+    #    find_library(SDL3_FRAMEWORK
+    #            NAMES SDL3
+    #            PATHS "${CMAKE_SOURCE_DIR}/third_party/"
+    #            REQUIRED
+    #    )
+    set(SDL3_FRAMEWORK "${CMAKE_SOURCE_DIR}/third_party/SDL3.xcframework")
     if (NOT SDL3_FRAMEWORK)
         message(FATAL_ERROR "SDL3.xcframework not found!")
     endif ()
@@ -85,7 +86,7 @@ endfunction()
 get_cpp_sources(3d_renderer SOURCES)
 add_executable(3d_renderer ${SOURCES})
 link_sdl3_xc(3d_renderer)
-link_sdl3_ttf_xc(3d_renderer)
+#link_sdl3_ttf_xc(3d_renderer)
 link_imgui(3d_renderer)
 
 option(USE_SANITIZERS "Enable ASan and UBSan" ON)

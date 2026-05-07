@@ -15,7 +15,7 @@ SDL_Renderer * renderer = nullptr;
 static uint32_t * color_buffer = nullptr;
 float * z_buffer = nullptr;
 static SDL_Texture * color_buffer_texture = nullptr;
-static TTF_Font * font = nullptr;
+// static TTF_Font * font = nullptr;
 
 static TouchControls touch_controls;
 static AnimationConfig animConfig;
@@ -61,18 +61,6 @@ bool initialize_window()
 	if(!SDL_Init(SDL_INIT_VIDEO))
 	{
 		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Error initializing SDL");
-		return false;
-	}
-	if(!TTF_Init())
-	{
-		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Error initializing SDL_TTF");
-		return false;
-	}
-
-	font = TTF_OpenFont("../assets/fonts/arial.ttf", 16);
-	if(!font)
-	{
-		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Error opening font");
 		return false;
 	}
 
@@ -164,68 +152,6 @@ void render_color_buffer()
 {
 	SDL_UpdateTexture(color_buffer_texture, nullptr, color_buffer, window_width * sizeof(uint32_t));
 	SDL_RenderTexture(renderer, color_buffer_texture, nullptr, nullptr);
-}
-
-static void render_text_line(const char * text, float x, float y, SDL_Color color)
-{
-	SDL_Surface * textSurface = TTF_RenderText_Blended(font, text, 0, color);
-	SDL_Texture * textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
-	SDL_DestroySurface(textSurface);
-
-	float textWidth = textTexture->w;
-	float textHeight = textTexture->h;
-
-	SDL_FRect destRect = {x, y, textWidth, textHeight};
-	SDL_RenderTexture(renderer, textTexture, nullptr, &destRect);
-	SDL_DestroyTexture(textTexture);
-}
-
-void render_stats_text()
-{
-	SDL_Color white = {255, 255, 255, 255};
-	const char * renderMethodText = nullptr;
-	switch(render_method)
-	{
-		case RENDER_WIRE:
-			renderMethodText = "Render: RENDER_WIRE";
-			break;
-		case RENDER_WIRE_VERTEX:
-			renderMethodText = "Render: RENDER_WIRE_VERTEX";
-			break;
-		case RENDER_FILL_TRIANGLE:
-			renderMethodText = "Render: RENDER_FILL_TRIANGLE";
-			break;
-		case RENDER_FILL_TRIANGLE_WIRE:
-			renderMethodText = "Render: RENDER_FILL_TRIANGLE_WIRE";
-			break;
-		case RENDER_TEXTURED:
-			renderMethodText = "Render: RENDER_TEXTURED";
-			break;
-		case RENDER_TEXTURED_WIRE:
-			renderMethodText = "Render: RENDER_TEXTURED_WIRE";
-			break;
-	}
-	render_text_line(renderMethodText, 10.0f, 10.0f, white);
-
-	// Render culling method
-	const char * cullMethodText = "Cull face: Disabled";
-	if(cull_method == CULL_BACKFACE)
-	{
-		cullMethodText = "Cull face: Enabled";
-	}
-
-	render_text_line(cullMethodText, 10.0f, 30.0f, white);
-
-	////////////////////////////////////////////////////////
-	// Render triangle to render count
-	std::string triangleCountText = std::format("Triangle to Render: {}", num_triangles_to_render);
-	render_text_line(triangleCountText.c_str(), 10.0f, 50.0f, white);
-	////////////////////////////////////////////////////////
-	// Render frame time & fps
-	float fps = 1000 / static_cast<float>(deltaTime);
-	std::string frameTimeText = std::format("deltaTime: {} ms, FPS: {:3.0f}", deltaTime, fps);
-	// render_text_line(frameTimeText.c_str(), 10.0f, 70.0f, white);
-	SDL_LogDebug(MY_LOG_RENDER, frameTimeText.c_str());
 }
 
 void render_imgui()
@@ -353,10 +279,8 @@ void free_display_resource()
 void destroy_window()
 {
 	destroy_imgui();
-
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
-	TTF_Quit();
 	SDL_Quit();
 }
 
