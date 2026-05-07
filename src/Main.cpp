@@ -12,25 +12,12 @@
 #include <stdlib.h>
 
 #include "backends/imgui_impl_sdl3.h"
-#include "backends/imgui_impl_sdlrenderer3.h"
-#include "imgui.h"
-
-struct TouchControls
-{
-	bool up = false;
-	bool down = false;
-	bool left = false;
-	bool right = false;
-};
-TouchControls touch_controls;
 
 bool is_running = false;
-bool is_paused = false;
 
-bool rotate_x = false;
-bool rotate_y = false;
-bool rotate_z = false;
-vec3_t mesh_rotation;
+// bool rotate_x = false;
+// bool rotate_y = false;
+// bool rotate_z = false;
 
 /////////////////////////////////////////////////////////////////////////////////////
 /// Global matrices
@@ -101,8 +88,9 @@ std::array<vec4_t, 3> projectTriangle(const mat4_t & projection_matrix, const st
 	return projected_points;
 }
 
-void updateMeshAnimation(mesh_t & mesh, float deltaTime)
+void updateMeshTransformation(mesh_t & mesh, float deltaTime, const AnimationConfig & animConfig)
 {
+	const auto & [rotate_x, rotate_y, rotate_z] = animConfig;
 	if(rotate_x)
 	{
 		mesh.rotation.x += 1.0 * deltaTime;
@@ -118,24 +106,6 @@ void updateMeshAnimation(mesh_t & mesh, float deltaTime)
 	mesh.translation.z = 6;
 }
 
-void setupMeshRotation(vec3_t & mesh_rotation, float x, float y, float z)
-{
-	if(x > 0)
-	{
-		rotate_x = true;
-		mesh_rotation.x = x;
-	}
-	if(y > 0)
-	{
-		rotate_y = true;
-		mesh_rotation.y = y;
-	}
-	if(z > 0)
-	{
-		rotate_z = true;
-		mesh_rotation.z = z;
-	}
-}
 }
 
 void setup()
@@ -143,8 +113,6 @@ void setup()
 	// Initialize render mode and triangle culling mode
 	render_method = RENDER_TEXTURED;
 	cull_method = CULL_BACKFACE;
-
-	helper::setupMeshRotation(mesh_rotation, 0.0, 0.0, 0.0);
 
 	// Initialize the scene light direction
 	vec3_t light_direction = {0, 0, 1};
@@ -170,26 +138,6 @@ void setup()
 	load_mesh("../assets/efa.obj", "../assets/efa.png", vec3_new(1, 1, 1), vec3_new(3, 0, 8), vec3_new(0, 0, 0));
 }
 
-void handle_key_up(float deltaTimeMs)
-{
-	update_camera_forward_velocity(vec3_mul(get_camera_direction(), 10.0 * deltaTimeMs));
-	update_camera_position(vec3_add(get_camera_position(), get_camera_forward_velocity()));
-}
-
-void handle_key_down(float deltaTimeMs)
-{
-	update_camera_forward_velocity(vec3_mul(get_camera_direction(), 10.0f * deltaTimeMs));
-	update_camera_position(vec3_sub(get_camera_position(), get_camera_forward_velocity()));
-}
-void handle_key_left(float deltaTimeMs)
-{
-	rotate_camera_yaw(-1.0 * deltaTimeMs);
-}
-
-void handle_key_right(float deltaTimeMs)
-{
-	rotate_camera_yaw(1.0 * deltaTimeMs);
-}
 void process_input()
 {
 	float deltaTimeMs = static_cast<float>(deltaTime) / 1000.0f;
@@ -224,21 +172,17 @@ void process_input()
 				{
 					cull_method = cull_method == CULL_BACKFACE ? CULL_NONE : CULL_BACKFACE;
 				}
-				else if(event.key.key == SDLK_SPACE)
-				{
-					is_paused = !is_paused;
-				}
 				else if(event.key.key == SDLK_X)
 				{
-					rotate_x = !rotate_x;
+					toggle_rotation_x();
 				}
 				else if(event.key.key == SDLK_Y)
 				{
-					rotate_y = !rotate_y;
+					toggle_rotation_y();
 				}
 				else if(event.key.key == SDLK_Z)
 				{
-					rotate_z = !rotate_z;
+					toggle_rotation_z();
 				}
 				else if(event.key.key == SDLK_W)
 				{
@@ -284,28 +228,9 @@ void update()
 	}
 
 	previous_frame_time = current_time;
-	if(is_paused)
-	{
-		return;
-	}
 
 	float deltaTimeMs = static_cast<float>(deltaTime) / 1000.0f;
-	if(touch_controls.up)
-	{
-		handle_key_up(deltaTimeMs);
-	}
-	if(touch_controls.down)
-	{
-		handle_key_down(deltaTimeMs);
-	}
-	if(touch_controls.left)
-	{
-		handle_key_left(deltaTimeMs);
-	}
-	if(touch_controls.right)
-	{
-		handle_key_right(deltaTimeMs);
-	}
+	handle_touch_controls();
 	// Initialize the counter of triangles to render for the current frame
 	num_triangles_to_render = 0;
 
@@ -316,7 +241,7 @@ void update()
 
 	for(mesh_t & mesh : get_meshes())
 	{
-		helper::updateMeshAnimation(mesh, deltaTimeMs);
+		helper::updateMeshTransformation(mesh, deltaTimeMs, get_amin_config());
 		mat4_t world_matrix = helper::initializeTransformationMatrix(mesh);
 
 		int num_faces = mesh.faces.size();
@@ -394,12 +319,11 @@ void update()
 		}
 	}
 }
+/**
+ *
+ */
 void render_scene_to_buffer()
 {
-	if(is_paused)
-	{
-		return;
-	}
 
 	clear_color_buffer(0xFF000000);
 	clear_z_buffer();
@@ -478,49 +402,13 @@ void render_scene_to_buffer()
 	}
 }
 
-void render_imgui(SDL_Renderer * renderer)
-{
-	ImGui_ImplSDLRenderer3_NewFrame();
-	ImGui_ImplSDL3_NewFrame();
-	ImGui::NewFrame();
-
-	ImGuiIO & io = ImGui::GetIO();
-
-	ImGui::SetNextWindowPos(ImVec2(0, 0));
-	ImGui::Begin("Input Capture", nullptr);
-
-	ImGui::Button("UP", ImVec2(32, 32));
-	touch_controls.up = ImGui::IsItemActive(); // Works for Mouse or Touch
-
-	ImGui::NewLine();
-
-	ImGui::Button("LEFT", ImVec2(32, 32));
-	touch_controls.left = ImGui::IsItemActive();
-	ImGui::SameLine();
-	ImGui::Button("DOWN", ImVec2(32, 32));
-	touch_controls.down = ImGui::IsItemActive();
-	ImGui::SameLine();
-	ImGui::Button("RIGHT", ImVec2(32, 32));
-	touch_controls.right = ImGui::IsItemActive();
-
-	ImGui::End();
-
-	ImGui::Begin("Debug Input");
-	ImGui::Text("Mouse Position: %.1f, %.1f", io.MousePos.x, io.MousePos.y);
-	ImGui::Text("Display Size: %.1f, %.1f", io.DisplaySize.x, io.DisplaySize.y);
-	ImGui::Text("Framebuffer Scale: %.1f", io.DisplayFramebufferScale.x);
-	ImGui::End();
-
-	ImGui::Render();
-	ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
-}
 void render()
 {
 	PROFILE_FUNCTION();
 	render_scene_to_buffer();
 	render_color_buffer();
 	render_stats_text();
-	render_imgui(renderer);
+	render_imgui();
 	SDL_RenderPresent(renderer);
 }
 

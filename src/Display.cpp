@@ -1,4 +1,6 @@
 #include "Display.h"
+
+#include "Camera.h"
 #include "SDLHelper.h"
 #include "backends/imgui_impl_sdl3.h"
 #include "backends/imgui_impl_sdlrenderer3.h"
@@ -14,6 +16,9 @@ static uint32_t * color_buffer = nullptr;
 float * z_buffer = nullptr;
 static SDL_Texture * color_buffer_texture = nullptr;
 static TTF_Font * font = nullptr;
+
+static TouchControls touch_controls;
+static AnimationConfig animConfig;
 
 // Logical size
 int window_width = 640;
@@ -223,6 +228,103 @@ void render_stats_text()
 	SDL_LogDebug(MY_LOG_RENDER, frameTimeText.c_str());
 }
 
+void render_imgui()
+{
+	ImGui_ImplSDLRenderer3_NewFrame();
+	ImGui_ImplSDL3_NewFrame();
+	ImGui::NewFrame();
+
+	ImGuiIO & io = ImGui::GetIO();
+
+	ImGui::SetNextWindowPos(ImVec2(0, 0));
+	ImGui::Begin("Input Capture", nullptr);
+
+	ImGui::Button("UP", ImVec2(32, 32));
+	touch_controls.up = ImGui::IsItemActive(); // Works for Mouse or Touch
+
+	ImGui::NewLine();
+
+	ImGui::Button("LEFT", ImVec2(32, 32));
+	touch_controls.left = ImGui::IsItemActive();
+	ImGui::SameLine();
+	ImGui::Button("DOWN", ImVec2(32, 32));
+	touch_controls.down = ImGui::IsItemActive();
+	ImGui::SameLine();
+	ImGui::Button("RIGHT", ImVec2(32, 32));
+	touch_controls.right = ImGui::IsItemActive();
+
+	ImGui::End();
+
+	ImGui::Begin("Debug Input");
+	ImGui::Text("Mouse Position: %.1f, %.1f", io.MousePos.x, io.MousePos.y);
+	ImGui::Text("Display Size: %.1f, %.1f", io.DisplaySize.x, io.DisplaySize.y);
+	ImGui::Text("Framebuffer Scale: %.1f", io.DisplayFramebufferScale.x);
+	ImGui::End();
+
+	ImGui::Render();
+	ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
+}
+////////////////////////////////////////////////////////////////////////
+/// Process input
+void handle_key_up(float deltaTimeMs)
+{
+	update_camera_forward_velocity(vec3_mul(get_camera_direction(), 10.0 * deltaTimeMs));
+	update_camera_position(vec3_add(get_camera_position(), get_camera_forward_velocity()));
+}
+
+void handle_key_down(float deltaTimeMs)
+{
+	update_camera_forward_velocity(vec3_mul(get_camera_direction(), 10.0f * deltaTimeMs));
+	update_camera_position(vec3_sub(get_camera_position(), get_camera_forward_velocity()));
+}
+void handle_key_left(float deltaTimeMs)
+{
+	rotate_camera_yaw(-1.0 * deltaTimeMs);
+}
+
+void handle_key_right(float deltaTimeMs)
+{
+	rotate_camera_yaw(1.0 * deltaTimeMs);
+}
+
+void handle_touch_controls()
+{
+	float deltaTimeMs = static_cast<float>(deltaTime) / 1000.0f;
+	if(touch_controls.up)
+	{
+		handle_key_up(deltaTimeMs);
+	}
+	if(touch_controls.down)
+	{
+		handle_key_down(deltaTimeMs);
+	}
+	if(touch_controls.left)
+	{
+		handle_key_left(deltaTimeMs);
+	}
+	if(touch_controls.right)
+	{
+		handle_key_right(deltaTimeMs);
+	}
+}
+void toggle_rotation_x()
+{
+	animConfig.rotate_x = !animConfig.rotate_x;
+}
+void toggle_rotation_y()
+{
+	animConfig.rotate_y = !animConfig.rotate_y;
+}
+void toggle_rotation_z()
+{
+	animConfig.rotate_z = !animConfig.rotate_z;
+}
+
+AnimationConfig & get_amin_config()
+{
+	return animConfig;
+}
+////////////////////////////////////////////////////////////////////////
 void clear_color_buffer(uint32_t color)
 {
 	for(int i = 0; i < window_width * window_height; i++)
