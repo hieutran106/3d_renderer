@@ -51,7 +51,7 @@ extern int window_width;
 extern int window_height;
 
 // Triangle to render
-constexpr int MAX_TRIANGLE_PER_MESH = 1000;
+constexpr int MAX_TRIANGLE_PER_MESH = 3000;
 extern triangle_t triangles_to_render[MAX_TRIANGLE_PER_MESH];
 extern int num_triangles_to_render;
 extern Uint64 deltaTime;

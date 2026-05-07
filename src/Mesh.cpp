@@ -1,6 +1,7 @@
 #include "Mesh.h"
 #include "SDLHelper.h"
 #include <SDL3/SDL.h>
+#include <numbers>
 
 static std::vector<mesh_t> meshes;
 
@@ -31,32 +32,49 @@ void load_mesh_obj_data(mesh_t & mesh, const char * filename)
 		// Face information
 		if(strncmp(line, "f ", 2) == 0)
 		{
-			int vertex_indices[3];
-			int texture_indices[3];
-			int normal_indices[3];
-			sscanf(
+			int v[4]; // vertex indices
+			int vt[4]; // texture indices
+			int vn[4]; // normal indices
+			int count = sscanf(
 				line,
-				"f %d/%d/%d %d/%d/%d %d/%d/%d",
-				&vertex_indices[0],
-				&texture_indices[0],
-				&normal_indices[0],
-				&vertex_indices[1],
-				&texture_indices[1],
-				&normal_indices[1],
-				&vertex_indices[2],
-				&texture_indices[2],
-				&normal_indices[2]
+				"f %d/%d/%d %d/%d/%d %d/%d/%d %d/%d/%d",
+				&v[0],
+				&vt[0],
+				&vn[0],
+				&v[1],
+				&vt[1],
+				&vn[1],
+				&v[2],
+				&vt[2],
+				&vn[2],
+				&v[3],
+				&vt[3],
+				&vn[3]
 			);
-			face_t face = {
-				.a = vertex_indices[0],
-				.b = vertex_indices[1],
-				.c = vertex_indices[2],
-				.a_uv = texcoords[texture_indices[0] - 1],
-				.b_uv = texcoords[texture_indices[1] - 1],
-				.c_uv = texcoords[texture_indices[2] - 1],
+			face_t face1 = {
+				.a = v[0],
+				.b = v[1],
+				.c = v[2],
+				.a_uv = texcoords[vt[0] - 1],
+				.b_uv = texcoords[vt[1] - 1],
+				.c_uv = texcoords[vt[2] - 1],
 				.color = 0xFFFFFFFF
 			};
-			mesh.faces.push_back(face);
+			mesh.faces.push_back(face1);
+			if(count == 12)
+			{
+				// Read a quad
+				face_t face2 = {
+					.a = v[0],
+					.b = v[2],
+					.c = v[3],
+					.a_uv = texcoords[vt[0] - 1],
+					.b_uv = texcoords[vt[2] - 1],
+					.c_uv = texcoords[vt[3] - 1],
+					.color = 0xFFFFFFFF
+				};
+				mesh.faces.push_back(face2);
+			}
 		}
 	}
 }
@@ -98,4 +116,58 @@ void free_meshes_resource()
 std::vector<mesh_t> & get_meshes()
 {
 	return meshes;
+}
+void load_runway_scene()
+{
+	load_runway_mesh();
+	load_f22_mesh();
+	load_efa_mesh();
+	load_f117_mesh();
+}
+void load_cat_mesh()
+{
+	load_mesh(
+		"./assets/cat.obj",
+		"./assets/f22.png",
+		vec3_new(1, 1, 1),
+		vec3_new(0, 0, +5),
+		vec3_new(0, std::numbers::pi / 2, 0)
+	);
+}
+
+void load_runway_mesh()
+{
+	load_mesh(
+		"./assets/runway.obj", "./assets/runway.png", vec3_new(1, 1, 1), vec3_new(0, -1.5, +23), vec3_new(0, 0, 0)
+	);
+}
+void load_f22_mesh()
+{
+	load_mesh(
+		"./assets/f22.obj",
+		"./assets/f22.png",
+		vec3_new(1, 1, 1),
+		vec3_new(0, -1.3, +5),
+		vec3_new(0, -std::numbers::pi / 2, 0)
+	);
+}
+void load_efa_mesh()
+{
+	load_mesh(
+		"./assets/efa.obj",
+		"./assets/efa.png",
+		vec3_new(1, 1, 1),
+		vec3_new(-2, -1.3, +9),
+		vec3_new(0, -std::numbers::pi / 2, 0)
+	);
+}
+void load_f117_mesh()
+{
+	load_mesh(
+		"./assets/f117.obj",
+		"./assets/f117.png",
+		vec3_new(1, 1, 1),
+		vec3_new(+2, -1.3, +9),
+		vec3_new(0, -std::numbers::pi / 2, 0)
+	);
 }

@@ -32,7 +32,7 @@ namespace helper
 		return mat4_make_perspective(fov_radians, aspect, znear, zfar);
 	}
 
-	mat4_t initializeTransformationMatrix(mesh_t & mesh)
+	mat4_t initializeTransformationMatrix(const mesh_t & mesh)
 	{
 		auto scale_matrix = mat4_make_scale(mesh.scale.x, mesh.scale.y, mesh.scale.z);
 		auto rotation_matrix_x = mat4_make_rotation_x(mesh.rotation.x);
@@ -99,8 +99,23 @@ namespace helper
 		mesh.translation.z = 6;
 	}
 
-	std::array<vec4_t, 3>
-	transformVertices(const std::array<vec3_t, 3> face_vertices, const mat4_t & mat4, const mat4_t & view_matrix)
+	/**
+	 * @brief Transforms triangle vertices from model space to camera space.
+	 *
+	 * This function takes a set of 3D vertices and applies the world matrix (to position
+	 * the object in the scene) followed by the view matrix (to position the object
+	 * relative to the camera).
+	 *
+	 * @param face_vertices An array of three 3D vectors representing the triangle in model space.
+	 * @param world_matrix The transformation matrix for the mesh (scale, rotation, translation).
+	 * @param view_matrix The camera's view matrix.
+	 * @return std::array<vec4_t, 3> The transformed vertices in camera (view) space.
+	 */
+	std::array<vec4_t, 3> transformVertices(
+		const std::array<vec3_t, 3> & face_vertices,
+		const mat4_t & world_matrix,
+		const mat4_t & view_matrix
+	)
 	{
 		std::array<vec4_t, 3> transformed_vertices;
 		// Loop all three vertices of this current face and apply transformation
@@ -135,15 +150,15 @@ void setup()
 	// https://en.wikipedia.org/wiki/Field_of_view_in_video_games
 	float fov_x_radians = 2 * std::atan(std::tan(fov_y_radians / 2) * aspectx);
 
-	float z_near = 0.1;
-	float z_far = 20.0;
+	float z_near = 1.0;
+	float z_far = 50.0;
 	projection_matrix = mat4_make_perspective(fov_y_radians, aspecty, z_near, z_far);
 
 	// -- Initialize frustum planes with a point and normal
 	init_frustum_planes(fov_x_radians, fov_y_radians, z_near, z_far);
 
-	load_mesh("./assets/f117.obj", "./assets/f117.png", vec3_new(1, 1, 1), vec3_new(-3, 0, 8), vec3_new(0, 0, 0));
-	load_mesh("./assets/efa.obj", "./assets/efa.png", vec3_new(1, 1, 1), vec3_new(3, 0, 8), vec3_new(0, 0, 0));
+	load_cat_mesh();
+	// load_runway_scene();
 }
 
 void handle_keydown_event(SDL_Keycode key, float deltaTimeMs)
@@ -216,6 +231,81 @@ void process_input()
 	}
 }
 
+void process_graphics_pipeline_stages(const mesh_t & mesh, float deltaTimeMs)
+{
+
+	// helper::updateMeshTransformation(mesh, deltaTimeMs, get_amin_config());
+	mat4_t world_matrix = helper::initializeTransformationMatrix(mesh);
+	for(const face_t & face : mesh.faces)
+	{
+		std::array<vec3_t, 3> face_vertices = {
+			mesh.vertices[face.a - 1], mesh.vertices[face.b - 1], mesh.vertices[face.c - 1]
+		};
+		std::array<vec4_t, 3> transformed_vertices =
+			helper::transformVertices(face_vertices, world_matrix, view_matrix);
+
+		vec3_t normal = helper::getFaceNormalVector(transformed_vertices);
+		// Check backface culling test to see if the current face should be projected
+		if(cull_method == CULL_BACKFACE)
+		{
+			vec3_t vector_a = vec3_from_vec4(transformed_vertices[0]);
+			// Find the vector between a point in the triangle and the camera origin
+			vec3_t origin = {0, 0, 0};
+			vec3_t camera_ray = origin - vector_a;
+
+			// Calculate how aligned the camera ray is with the face normal (Using dot product)
+			auto culling = vec3_dot(normal, camera_ray);
+			if(culling < 0)
+			{
+				continue;
+			}
+		}
+
+		// Create a polygon from the original transformed triangle to be clipped
+		polygon_t polygon = create_polygon_from_triangle(
+			vec3_from_vec4(transformed_vertices[0]),
+			vec3_from_vec4(transformed_vertices[1]),
+			vec3_from_vec4(transformed_vertices[2]),
+			face.a_uv,
+			face.b_uv,
+			face.c_uv
+		);
+		// Clip the polygon and returns a new polygon with potential new vertices
+		clip_polygon(&polygon);
+
+		std::array<triangle_t, MAX_NUM_POLY_TRIANGLES> triangles_after_clipping;
+		int num_triangles_after_clipping = 0;
+
+		triangles_from_polygon(&polygon, triangles_after_clipping, num_triangles_after_clipping);
+
+		for(int t = 0; t < num_triangles_after_clipping; t++)
+		{
+			triangle_t triangle = triangles_after_clipping[t];
+			auto triangle_points = triangle.points;
+			// Loop all three vertices to perform a projection
+			std::array<vec4_t, 3> projected_points = helper::projectTriangle(projection_matrix, triangle_points);
+
+			////////////////////////////////////////////////////////////////////////////////////////////////
+			/// Flat shading and light
+			// Calculate the shade intensity based on how aligned is the face normal and the opposite of the light direction
+			float light_intensity_factor = -vec3_dot(normal, get_light_direction());
+
+			// Calculate the triangle color based on the light angle
+			uint32_t shading = light_apply_intensity(face.color, light_intensity_factor);
+
+			triangle_t triangle_to_render = {
+				.color = shading, .points = projected_points, .texcoords = triangle.texcoords, .texture = mesh.texture
+			};
+			// Save the projected triangle in the array of triangles to render
+			if(num_triangles_to_render < MAX_TRIANGLE_PER_MESH)
+			{
+				triangles_to_render[num_triangles_to_render] = triangle_to_render;
+				num_triangles_to_render++;
+			}
+		}
+	}
+}
+
 void update()
 {
 	const auto current_time = SDL_GetTicks();
@@ -244,80 +334,7 @@ void update()
 	for(mesh_t & mesh : get_meshes())
 	{
 		helper::updateMeshTransformation(mesh, deltaTimeMs, get_amin_config());
-		mat4_t world_matrix = helper::initializeTransformationMatrix(mesh);
-
-		// int num_faces = mesh.faces.size();
-		for(const face_t & face : mesh.faces)
-		{
-			// const face_t & face = mesh.faces[i];
-
-			std::array<vec3_t, 3> face_vertices = {
-				mesh.vertices[face.a - 1], mesh.vertices[face.b - 1], mesh.vertices[face.c - 1]
-			};
-
-			std::array<vec4_t, 3> transformed_vertices =
-				helper::transformVertices(face_vertices, world_matrix, view_matrix);
-
-			vec3_t normal = helper::getFaceNormalVector(transformed_vertices);
-			// Check backface culling test to see if the current face should be projected
-			if(cull_method == CULL_BACKFACE)
-			{
-				vec3_t vector_a = vec3_from_vec4(transformed_vertices[0]);
-				// Find the vector between a point in the triangle and the camera origin
-				vec3_t origin = {0, 0, 0};
-				vec3_t camera_ray = origin - vector_a;
-
-				// Calculate how aligned the camera ray is with the face normal (Using dot product)
-				auto culling = vec3_dot(normal, camera_ray);
-				if(culling < 0)
-				{
-					continue;
-				}
-			}
-
-			// Create a polygon from the original transformed triangle to be clipped
-			polygon_t polygon = create_polygon_from_triangle(
-				vec3_from_vec4(transformed_vertices[0]),
-				vec3_from_vec4(transformed_vertices[1]),
-				vec3_from_vec4(transformed_vertices[2]),
-				face.a_uv,
-				face.b_uv,
-				face.c_uv
-			);
-			// Clip the polygon and returns a new polygon with potential new vertices
-			clip_polygon(&polygon);
-
-			std::array<triangle_t, MAX_NUM_POLY_TRIANGLES> triangles_after_clipping;
-			int num_triangles_after_clipping = 0;
-
-			triangles_from_polygon(&polygon, triangles_after_clipping, num_triangles_after_clipping);
-
-			for(int t = 0; t < num_triangles_after_clipping; t++)
-			{
-				triangle_t triangle = triangles_after_clipping[t];
-				auto triangle_points = triangle.points;
-				// Loop all three vertices to perform a projection
-				std::array<vec4_t, 3> projected_points = helper::projectTriangle(projection_matrix, triangle_points);
-
-				////////////////////////////////////////////////////////////////////////////////////////////////
-				/// Flat shading and light
-				// Calculate the shade intensity based on how aligned is the face normal and the opposite of the light direction
-				float light_intensity_factor = -vec3_dot(normal, get_light_direction());
-
-				// Calculate the triangle color based on the light angle
-				uint32_t shading = light_apply_intensity(face.color, light_intensity_factor);
-
-				triangle_t triangle_to_render = {
-					.color = shading,
-					.points = projected_points,
-					.texcoords = triangle.texcoords,
-					.texture = mesh.texture
-				};
-				// Save the projected triangle in the array of triangles to render
-				triangles_to_render[num_triangles_to_render] = triangle_to_render;
-				num_triangles_to_render++;
-			}
-		}
+		process_graphics_pipeline_stages(mesh, deltaTimeMs);
 	}
 }
 /**

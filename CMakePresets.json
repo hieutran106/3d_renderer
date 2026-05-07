@@ -7,7 +7,8 @@
       "binaryDir": "${sourceDir}/cmake-build-macos-debug",
       "generator": "Ninja",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
+        "CMAKE_BUILD_TYPE": "Debug",
+        "USE_SANITIZERS": "ON"
       }
     },
     {
