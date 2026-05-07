@@ -196,6 +196,7 @@ void process_input()
 	SDL_Event event;
 	while(SDL_PollEvent(&event))
 	{
+		SDL_ConvertEventToRenderCoordinates(renderer, &event);
 		ImGui_ImplSDL3_ProcessEvent(&event);
 		switch(event.type)
 		{
@@ -483,6 +484,8 @@ void render_imgui(SDL_Renderer * renderer)
 	ImGui_ImplSDL3_NewFrame();
 	ImGui::NewFrame();
 
+	ImGuiIO & io = ImGui::GetIO();
+
 	ImGui::SetNextWindowPos(ImVec2(0, 0));
 	ImGui::Begin("Input Capture", nullptr);
 
@@ -500,6 +503,12 @@ void render_imgui(SDL_Renderer * renderer)
 	ImGui::Button("RIGHT", ImVec2(32, 32));
 	touch_controls.right = ImGui::IsItemActive();
 
+	ImGui::End();
+
+	ImGui::Begin("Debug Input");
+	ImGui::Text("Mouse Position: %.1f, %.1f", io.MousePos.x, io.MousePos.y);
+	ImGui::Text("Display Size: %.1f, %.1f", io.DisplaySize.x, io.DisplaySize.y);
+	ImGui::Text("Framebuffer Scale: %.1f", io.DisplayFramebufferScale.x);
 	ImGui::End();
 
 	ImGui::Render();

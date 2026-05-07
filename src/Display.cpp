@@ -33,14 +33,8 @@ bool initialize_imgui(SDL_Renderer * renderer, SDL_Window * window)
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 
-	ImGuiIO & io = ImGui::GetIO();
-	io.FontGlobalScale = 1.0f;
-	SDL_Log("initialize_imgui scale=%f, display size w=%d, h=%d", scale, window_width, window_height);
-	io.DisplayFramebufferScale = ImVec2(scale, scale);
-	io.DisplaySize = ImVec2(window_width, window_height);
-
+	// ImGuiIO & io = ImGui::GetIO();
 	ImGui::StyleColorsDark();
-
 	if(!ImGui_ImplSDL3_InitForSDLRenderer(window, renderer))
 	{
 		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Error initializing ImGui");
