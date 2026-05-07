@@ -15,7 +15,6 @@ SDL_Renderer * renderer = nullptr;
 static uint32_t * color_buffer = nullptr;
 float * z_buffer = nullptr;
 static SDL_Texture * color_buffer_texture = nullptr;
-// static TTF_Font * font = nullptr;
 
 static TouchControls touch_controls;
 static AnimationConfig animConfig;
@@ -154,6 +153,38 @@ void render_color_buffer()
 	SDL_RenderTexture(renderer, color_buffer_texture, nullptr, nullptr);
 }
 
+void create_imgui_touch_control_window()
+{
+	ImVec2 windowSize(300.0f, 80.0f);
+	ImVec2 margin(0.0f, 0.0f);
+
+	ImGui::SetNextWindowSize(windowSize);
+	ImGui::SetNextWindowPos(ImVec2(window_width - windowSize.x - margin.x, window_height - windowSize.y - margin.y));
+
+	ImGui::Begin("Inputs", nullptr);
+
+	float buttonWidth = 60.0;
+	ImGui::Button("Left", ImVec2(buttonWidth, 0.0f));
+	touch_controls.left = ImGui::IsItemActive();
+	ImGui::SameLine();
+
+	ImGui::Button("Down", ImVec2(buttonWidth, 0.0f));
+	touch_controls.down = ImGui::IsItemActive();
+	ImGui::SameLine();
+	ImGui::Button("Up", ImVec2(buttonWidth, 0.0f));
+	touch_controls.up = ImGui::IsItemActive();
+	ImGui::SameLine();
+	ImGui::Button("Right", ImVec2(buttonWidth, 0.0f));
+	touch_controls.right = ImGui::IsItemActive();
+
+	ImGui::Button("W", ImVec2(buttonWidth, 0.0f));
+	touch_controls.w = ImGui::IsItemActive();
+	ImGui::SameLine();
+	ImGui::Button("S", ImVec2(buttonWidth, 0.0f));
+	touch_controls.s = ImGui::IsItemActive();
+
+	ImGui::End();
+}
 void render_imgui()
 {
 	ImGui_ImplSDLRenderer3_NewFrame();
@@ -162,34 +193,16 @@ void render_imgui()
 
 	ImGuiIO & io = ImGui::GetIO();
 
-	ImVec2 windowSize(300.0f, 56.0f);
-	ImVec2 margin(10.0f, 10.0f);
-
-	ImGui::SetNextWindowSize(windowSize);
-	ImGui::SetNextWindowPos(ImVec2(window_width - windowSize.x - margin.x, window_height - windowSize.y - margin.y));
-
-	ImGui::Begin("Input Capture", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
-
-	ImGui::Button("Left");
-	touch_controls.left = ImGui::IsItemActive();
-	ImGui::SameLine();
-
-	ImGui::Button("Down");
-	touch_controls.down = ImGui::IsItemActive();
-	ImGui::SameLine();
-	ImGui::Button("Up");
-	touch_controls.up = ImGui::IsItemActive();
-	ImGui::SameLine();
-	ImGui::Button("Right");
-	touch_controls.right = ImGui::IsItemActive();
-
-	ImGui::End();
-
-	ImGui::Begin("Debug Input", nullptr);
+	ImGuiWindowFlags flags = ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize;
+	ImGui::SetNextWindowSize(ImVec2(400, 200));
+	ImGui::Begin("Debug Input", nullptr, flags);
+	ImGui::Text("Testing");
 	ImGui::Text("Mouse Position: %.1f, %.1f", io.MousePos.x, io.MousePos.y);
 	ImGui::Text("Display Size: %.1f, %.1f", io.DisplaySize.x, io.DisplaySize.y);
 	ImGui::Text("Framebuffer Scale: %.1f", io.DisplayFramebufferScale.x);
 	ImGui::End();
+
+	create_imgui_touch_control_window();
 
 	ImGui::Render();
 	ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
@@ -216,6 +229,14 @@ void handle_key_right(float deltaTimeMs)
 {
 	rotate_camera_yaw(1.0 * deltaTimeMs);
 }
+void handle_key_w(float deltaTimeMs)
+{
+	rotate_camera_pitch(3.0 * deltaTimeMs);
+}
+void handle_key_s(float deltaTimeMs)
+{
+	rotate_camera_pitch(-3.0 * deltaTimeMs);
+}
 
 void handle_touch_controls()
 {
@@ -235,6 +256,14 @@ void handle_touch_controls()
 	if(touch_controls.right)
 	{
 		handle_key_right(deltaTimeMs);
+	}
+	if(touch_controls.w)
+	{
+		handle_key_w(deltaTimeMs);
+	}
+	if(touch_controls.s)
+	{
+		handle_key_s(deltaTimeMs);
 	}
 }
 void toggle_rotation_x()

@@ -178,11 +178,11 @@ void process_input()
 				}
 				else if(event.key.key == SDLK_W)
 				{
-					rotate_camera_pitch(3.0 * deltaTimeMs);
+					handle_key_w(deltaTimeMs);
 				}
 				else if(event.key.key == SDLK_S)
 				{
-					rotate_camera_pitch(-3.0 * deltaTimeMs);
+					handle_key_s(deltaTimeMs);
 				}
 				else if(event.key.key == SDLK_RIGHT)
 				{

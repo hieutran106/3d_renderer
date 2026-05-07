@@ -12,6 +12,8 @@ struct TouchControls
 	bool down = false;
 	bool left = false;
 	bool right = false;
+	bool w = false;
+	bool s = false;
 };
 
 struct AnimationConfig
@@ -73,6 +75,8 @@ void handle_key_up(float deltaTimeMs);
 void handle_key_down(float deltaTimeMs);
 void handle_key_left(float deltaTimeMs);
 void handle_key_right(float deltaTimeMs);
+void handle_key_w(float deltaTimeMs);
+void handle_key_s(float deltaTimeMs);
 void handle_touch_controls();
 void toggle_rotation_x();
 void toggle_rotation_y();
