@@ -236,21 +236,25 @@ void render_imgui()
 
 	ImGuiIO & io = ImGui::GetIO();
 
-	ImGui::SetNextWindowPos(ImVec2(0, 0));
-	ImGui::Begin("Input Capture", nullptr);
+	ImVec2 windowSize(300.0f, 56.0f);
+	ImVec2 margin(10.0f, 10.0f);
 
-	ImGui::Button("UP", ImVec2(32, 32));
-	touch_controls.up = ImGui::IsItemActive(); // Works for Mouse or Touch
+	ImGui::SetNextWindowSize(windowSize);
+	ImGui::SetNextWindowPos(ImVec2(window_width - windowSize.x - margin.x, window_height - windowSize.y - margin.y));
 
-	ImGui::NewLine();
+	ImGui::Begin("Input Capture", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
 
-	ImGui::Button("LEFT", ImVec2(32, 32));
+	ImGui::Button("Left");
 	touch_controls.left = ImGui::IsItemActive();
 	ImGui::SameLine();
-	ImGui::Button("DOWN", ImVec2(32, 32));
+
+	ImGui::Button("Down");
 	touch_controls.down = ImGui::IsItemActive();
 	ImGui::SameLine();
-	ImGui::Button("RIGHT", ImVec2(32, 32));
+	ImGui::Button("Up");
+	touch_controls.up = ImGui::IsItemActive();
+	ImGui::SameLine();
+	ImGui::Button("Right");
 	touch_controls.right = ImGui::IsItemActive();
 
 	ImGui::End();
