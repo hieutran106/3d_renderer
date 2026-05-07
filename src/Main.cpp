@@ -280,6 +280,10 @@ void update()
 	}
 
 	float deltaTimeMs = static_cast<float>(deltaTime) / 1000.0f;
+	if(touch_controls.up)
+	{
+		move_camera_forward(deltaTimeMs);
+	}
 	// Initialize the counter of triangles to render for the current frame
 	num_triangles_to_render = 0;
 
@@ -458,41 +462,25 @@ void render_imgui(SDL_Renderer * renderer)
 	ImGui_ImplSDL3_NewFrame();
 	ImGui::NewFrame();
 
-	// C. Draw UI
+	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
+	ImGuiWindowFlags imgui_windowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground;
+	imgui_windowFlags = 0;
+	ImGui::Begin("TouchControls", nullptr, imgui_windowFlags);
+
+	if(ImGui::Button("Up", ImVec2(32, 32)))
 	{
-		// Set the window flags to remove title bar, background, resizing, and make it transparent.
-		ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings
-									  | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove;
-
-		// Define the size of our button in LOGICAL space
-		const ImVec2 button_size = ImVec2(24, 24);
-
-		// --- CRITICAL POSITIONING CALCULATION ---
-		// Calculate the position based on the LOGICAL resolution, not the actual window pixel size.
-		// ImGui needs to know where in its coordinate system (0 to 640) to draw.
-		// We are using a simple hardcoded logical resolution, but a robust app
-		// might query SDL_GetRenderLogicalPresentation() to get the actual running logic size.
-
-		// Set the Next Window position using ImGui's absolute logical coordinates.
-		// We align it to the bottom-right (pivot 1.0f, 1.0f).
-		ImGui::SetNextWindowPos(ImVec2((float)window_width, (float)window_height), ImGuiCond_Always, ImVec2(1.0f, 1.0f));
-
-		// Set background color to transparent for this specific window
-		ImGui::SetNextWindowBgAlpha(0.0f);
-
-		// Begin a bare-bones window. If Begin returns true (window is visible), draw the button.
-		if(ImGui::Begin("##Overlay", nullptr, window_flags))
-		{
-			// Draw the simple button "^"
-			if(ImGui::Button("^", button_size))
-			{
-				SDL_Log("Arrow Button Clicked!");
-			}
-		}
-		ImGui::End();
+		SDL_Log("Up Click");
 	}
+	bool isUpPressed = ImGui::IsItemActive();
+	if(isUpPressed)
+	{
+		SDL_Log("Up Pressed");
+	}
+	touch_controls.up = isUpPressed;
 
-	// ImGui::End();
+	// The rest of your buttons...
+	ImGui::End();
+
 	ImGui::Render();
 	ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
 }
@@ -515,6 +503,7 @@ void free_resource()
 int main(int argc, char * argv[])
 {
 	PROFILE_FUNCTION();
+	SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "1");
 	SDL_SetLogPriorities(SDL_LOG_PRIORITY_INFO);
 	SDL_SetAppMetadata("3D renderer", "1.2.0", "com.ht.3d-renderer");
 	is_running = initialize_window();
