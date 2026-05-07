@@ -193,14 +193,14 @@ void render_imgui()
 
 	ImGuiIO & io = ImGui::GetIO();
 
-	ImGuiWindowFlags flags = ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize;
-	ImGui::SetNextWindowSize(ImVec2(400, 200));
-	ImGui::Begin("Debug Input", nullptr, flags);
-	ImGui::Text("Testing");
-	ImGui::Text("Mouse Position: %.1f, %.1f", io.MousePos.x, io.MousePos.y);
-	ImGui::Text("Display Size: %.1f, %.1f", io.DisplaySize.x, io.DisplaySize.y);
-	ImGui::Text("Framebuffer Scale: %.1f", io.DisplayFramebufferScale.x);
-	ImGui::End();
+	// ImGuiWindowFlags flags = ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize;
+	// ImGui::SetNextWindowSize(ImVec2(400, 200));
+	// ImGui::Begin("Debug Input", nullptr, flags);
+	// ImGui::Text("Testing");
+	// ImGui::Text("Mouse Position: %.1f, %.1f", io.MousePos.x, io.MousePos.y);
+	// ImGui::Text("Display Size: %.1f, %.1f", io.DisplaySize.x, io.DisplaySize.y);
+	// ImGui::Text("Framebuffer Scale: %.1f", io.DisplayFramebufferScale.x);
+	// ImGui::End();
 
 	create_imgui_touch_control_window();
 

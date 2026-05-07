@@ -42,7 +42,8 @@ namespace helper
 
 		// Create a World Matrix combining scale, rotation, and translation matrices
 		// Order matters: First scale, then rotate, then translate. [T]*[R]*[S]*v
-		mat4_t world_matrix = translation_matrix * rotation_matrix_x * rotation_matrix_y * rotation_matrix_z * scale_matrix;
+		mat4_t world_matrix =
+			translation_matrix * rotation_matrix_x * rotation_matrix_y * rotation_matrix_z * scale_matrix;
 		return world_matrix;
 	}
 
@@ -98,6 +99,21 @@ namespace helper
 		mesh.translation.z = 6;
 	}
 
+	std::array<vec4_t, 3>
+	transformVertices(const std::array<vec3_t, 3> face_vertices, const mat4_t & mat4, const mat4_t & view_matrix)
+	{
+		std::array<vec4_t, 3> transformed_vertices;
+		// Loop all three vertices of this current face and apply transformation
+		for(int j = 0; j < 3; j++)
+		{
+			vec4_t transformed_vertex = vec4_from_vec3(face_vertices[j]);
+			transformed_vertex = mat4_mul_vec4(world_matrix, transformed_vertex);
+			// Transform the world space to camera space
+			transformed_vertex = mat4_mul_vec4(view_matrix, transformed_vertex);
+			transformed_vertices[j] = transformed_vertex;
+		}
+		return transformed_vertices;
+	}
 }
 
 void setup()
@@ -130,6 +146,57 @@ void setup()
 	load_mesh("./assets/efa.obj", "./assets/efa.png", vec3_new(1, 1, 1), vec3_new(3, 0, 8), vec3_new(0, 0, 0));
 }
 
+void handle_keydown_event(SDL_Keycode key, float deltaTimeMs)
+{
+	switch(key)
+	{
+		case SDLK_ESCAPE:
+			is_running = false;
+			break;
+		case SDLK_1:
+			render_method = (render_method == RENDER_WIRE_VERTEX) ? RENDER_WIRE : RENDER_WIRE_VERTEX;
+			break;
+		case SDLK_2:
+			render_method = (render_method == RENDER_FILL_TRIANGLE) ? RENDER_FILL_TRIANGLE_WIRE : RENDER_FILL_TRIANGLE;
+			break;
+		case SDLK_3:
+			render_method = (render_method == RENDER_TEXTURED) ? RENDER_TEXTURED_WIRE : RENDER_TEXTURED;
+			break;
+		case SDLK_C:
+			cull_method = (cull_method == CULL_BACKFACE) ? CULL_NONE : CULL_BACKFACE;
+			break;
+		case SDLK_X:
+			toggle_rotation_x();
+			break;
+		case SDLK_Y:
+			toggle_rotation_y();
+			break;
+		case SDLK_Z:
+			toggle_rotation_z();
+			break;
+		case SDLK_W:
+			handle_key_w(deltaTimeMs);
+			break;
+		case SDLK_S:
+			handle_key_s(deltaTimeMs);
+			break;
+		case SDLK_RIGHT:
+			handle_key_right(deltaTimeMs);
+			break;
+		case SDLK_LEFT:
+			handle_key_left(deltaTimeMs);
+			break;
+		case SDLK_UP:
+			handle_key_up(deltaTimeMs);
+			break;
+		case SDLK_DOWN:
+			handle_key_down(deltaTimeMs);
+			break;
+		default:
+			break;
+	}
+}
+
 void process_input()
 {
 	float deltaTimeMs = static_cast<float>(deltaTime) / 1000.0f;
@@ -138,69 +205,13 @@ void process_input()
 	{
 		SDL_ConvertEventToRenderCoordinates(renderer, &event);
 		ImGui_ImplSDL3_ProcessEvent(&event);
-		switch(event.type)
+		if(event.type == SDL_EVENT_QUIT)
 		{
-			case SDL_EVENT_QUIT:
-				is_running = false;
-				break;
-			case SDL_EVENT_KEY_DOWN:
-				if(event.key.key == SDLK_ESCAPE)
-				{
-					is_running = false;
-				}
-				else if(event.key.key == SDLK_1)
-				{
-					render_method = render_method == RENDER_WIRE_VERTEX ? RENDER_WIRE : RENDER_WIRE_VERTEX;
-				}
-				else if(event.key.key == SDLK_2)
-				{
-					render_method = render_method == RENDER_FILL_TRIANGLE ? RENDER_FILL_TRIANGLE_WIRE : RENDER_FILL_TRIANGLE;
-				}
-				else if(event.key.key == SDLK_3)
-				{
-					render_method = render_method == RENDER_TEXTURED ? RENDER_TEXTURED_WIRE : RENDER_TEXTURED;
-				}
-				else if(event.key.key == SDLK_C)
-				{
-					cull_method = cull_method == CULL_BACKFACE ? CULL_NONE : CULL_BACKFACE;
-				}
-				else if(event.key.key == SDLK_X)
-				{
-					toggle_rotation_x();
-				}
-				else if(event.key.key == SDLK_Y)
-				{
-					toggle_rotation_y();
-				}
-				else if(event.key.key == SDLK_Z)
-				{
-					toggle_rotation_z();
-				}
-				else if(event.key.key == SDLK_W)
-				{
-					handle_key_w(deltaTimeMs);
-				}
-				else if(event.key.key == SDLK_S)
-				{
-					handle_key_s(deltaTimeMs);
-				}
-				else if(event.key.key == SDLK_RIGHT)
-				{
-					handle_key_right(deltaTimeMs);
-				}
-				else if(event.key.key == SDLK_LEFT)
-				{
-					handle_key_left(deltaTimeMs);
-				}
-				else if(event.key.key == SDLK_UP)
-				{
-					handle_key_up(deltaTimeMs);
-				}
-				else if(event.key.key == SDLK_DOWN)
-				{
-					handle_key_down(deltaTimeMs);
-				}
-				break;
+			is_running = false;
+		}
+		else if(event.type == SDL_EVENT_KEY_DOWN)
+		{
+			handle_keydown_event(event.key.key, deltaTimeMs);
 		}
 	}
 }
@@ -235,23 +246,17 @@ void update()
 		helper::updateMeshTransformation(mesh, deltaTimeMs, get_amin_config());
 		mat4_t world_matrix = helper::initializeTransformationMatrix(mesh);
 
-		int num_faces = mesh.faces.size();
-		for(int i = 0; i < num_faces; i++)
+		// int num_faces = mesh.faces.size();
+		for(const face_t & face : mesh.faces)
 		{
-			const face_t & mesh_face = mesh.faces[i];
+			// const face_t & face = mesh.faces[i];
 
-			const vec3_t face_vertices[3] = {mesh.vertices[mesh_face.a - 1], mesh.vertices[mesh_face.b - 1], mesh.vertices[mesh_face.c - 1]};
+			std::array<vec3_t, 3> face_vertices = {
+				mesh.vertices[face.a - 1], mesh.vertices[face.b - 1], mesh.vertices[face.c - 1]
+			};
 
-			std::array<vec4_t, 3> transformed_vertices;
-			// Loop all three vertices of this current face and apply transformation
-			for(int j = 0; j < 3; j++)
-			{
-				vec4_t transformed_vertex = vec4_from_vec3(face_vertices[j]);
-				transformed_vertex = mat4_mul_vec4(world_matrix, transformed_vertex);
-				// Transform the world space to camera space
-				transformed_vertex = mat4_mul_vec4(view_matrix, transformed_vertex);
-				transformed_vertices[j] = transformed_vertex;
-			}
+			std::array<vec4_t, 3> transformed_vertices =
+				helper::transformVertices(face_vertices, world_matrix, view_matrix);
 
 			vec3_t normal = helper::getFaceNormalVector(transformed_vertices);
 			// Check backface culling test to see if the current face should be projected
@@ -275,9 +280,9 @@ void update()
 				vec3_from_vec4(transformed_vertices[0]),
 				vec3_from_vec4(transformed_vertices[1]),
 				vec3_from_vec4(transformed_vertices[2]),
-				mesh_face.a_uv,
-				mesh_face.b_uv,
-				mesh_face.c_uv
+				face.a_uv,
+				face.b_uv,
+				face.c_uv
 			);
 			// Clip the polygon and returns a new polygon with potential new vertices
 			clip_polygon(&polygon);
@@ -300,9 +305,14 @@ void update()
 				float light_intensity_factor = -vec3_dot(normal, get_light_direction());
 
 				// Calculate the triangle color based on the light angle
-				uint32_t shading = light_apply_intensity(mesh_face.color, light_intensity_factor);
+				uint32_t shading = light_apply_intensity(face.color, light_intensity_factor);
 
-				triangle_t triangle_to_render = {.color = shading, .points = projected_points, .texcoords = triangle.texcoords, .texture = mesh.texture};
+				triangle_t triangle_to_render = {
+					.color = shading,
+					.points = projected_points,
+					.texcoords = triangle.texcoords,
+					.texture = mesh.texture
+				};
 				// Save the projected triangle in the array of triangles to render
 				triangles_to_render[num_triangles_to_render] = triangle_to_render;
 				num_triangles_to_render++;
@@ -370,8 +380,8 @@ void render_scene_to_buffer()
 			);
 		}
 		// Draw triangle wireframe
-		if(render_method == RENDER_WIRE || render_method == RENDER_WIRE_VERTEX || render_method == RENDER_FILL_TRIANGLE_WIRE
-		   || render_method == RENDER_TEXTURED_WIRE)
+		if(render_method == RENDER_WIRE || render_method == RENDER_WIRE_VERTEX
+		   || render_method == RENDER_FILL_TRIANGLE_WIRE || render_method == RENDER_TEXTURED_WIRE)
 		{
 			draw_triangle(
 				triangle.points[0].x,
