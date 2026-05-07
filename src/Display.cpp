@@ -56,6 +56,9 @@ bool initialize_imgui(SDL_Renderer * renderer, SDL_Window * window)
 
 bool initialize_window()
 {
+	SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "1");
+	SDL_SetAppMetadata("3D renderer", "1.2.0", "com.ht.3d-renderer");
+
 	if(!SDL_Init(SDL_INIT_VIDEO))
 	{
 		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Error initializing SDL");

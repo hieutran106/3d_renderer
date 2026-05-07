@@ -19,8 +19,8 @@ struct TouchControls
 {
 	bool up = false;
 	bool down = false;
-	// bool left = false;
-	// bool right = false;
+	bool left = false;
+	bool right = false;
 };
 TouchControls touch_controls;
 
@@ -170,16 +170,25 @@ void setup()
 	load_mesh("../assets/efa.obj", "../assets/efa.png", vec3_new(1, 1, 1), vec3_new(3, 0, 8), vec3_new(0, 0, 0));
 }
 
-void move_camera_forward(float deltaTimeMs)
+void handle_key_up(float deltaTimeMs)
 {
 	update_camera_forward_velocity(vec3_mul(get_camera_direction(), 10.0 * deltaTimeMs));
 	update_camera_position(vec3_add(get_camera_position(), get_camera_forward_velocity()));
 }
 
-void move_camera_backward(float deltaTimeMs)
+void handle_key_down(float deltaTimeMs)
 {
 	update_camera_forward_velocity(vec3_mul(get_camera_direction(), 10.0f * deltaTimeMs));
 	update_camera_position(vec3_sub(get_camera_position(), get_camera_forward_velocity()));
+}
+void handle_key_left(float deltaTimeMs)
+{
+	rotate_camera_yaw(-1.0 * deltaTimeMs);
+}
+
+void handle_key_right(float deltaTimeMs)
+{
+	rotate_camera_yaw(1.0 * deltaTimeMs);
 }
 void process_input()
 {
@@ -240,19 +249,19 @@ void process_input()
 				}
 				else if(event.key.key == SDLK_RIGHT)
 				{
-					rotate_camera_yaw(1.0 * deltaTimeMs);
+					handle_key_right(deltaTimeMs);
 				}
 				else if(event.key.key == SDLK_LEFT)
 				{
-					rotate_camera_yaw(-1.0 * deltaTimeMs);
+					handle_key_left(deltaTimeMs);
 				}
 				else if(event.key.key == SDLK_UP)
 				{
-					move_camera_forward(deltaTimeMs);
+					handle_key_up(deltaTimeMs);
 				}
 				else if(event.key.key == SDLK_DOWN)
 				{
-					move_camera_backward(deltaTimeMs);
+					handle_key_down(deltaTimeMs);
 				}
 				break;
 		}
@@ -282,7 +291,19 @@ void update()
 	float deltaTimeMs = static_cast<float>(deltaTime) / 1000.0f;
 	if(touch_controls.up)
 	{
-		move_camera_forward(deltaTimeMs);
+		handle_key_up(deltaTimeMs);
+	}
+	if(touch_controls.down)
+	{
+		handle_key_down(deltaTimeMs);
+	}
+	if(touch_controls.left)
+	{
+		handle_key_left(deltaTimeMs);
+	}
+	if(touch_controls.right)
+	{
+		handle_key_right(deltaTimeMs);
 	}
 	// Initialize the counter of triangles to render for the current frame
 	num_triangles_to_render = 0;
@@ -462,23 +483,23 @@ void render_imgui(SDL_Renderer * renderer)
 	ImGui_ImplSDL3_NewFrame();
 	ImGui::NewFrame();
 
-	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
-	ImGuiWindowFlags imgui_windowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground;
-	imgui_windowFlags = 0;
-	ImGui::Begin("TouchControls", nullptr, imgui_windowFlags);
+	ImGui::SetNextWindowPos(ImVec2(0, 0));
+	ImGui::Begin("Input Capture", nullptr);
 
-	if(ImGui::Button("Up", ImVec2(32, 32)))
-	{
-		SDL_Log("Up Click");
-	}
-	bool isUpPressed = ImGui::IsItemActive();
-	if(isUpPressed)
-	{
-		SDL_Log("Up Pressed");
-	}
-	touch_controls.up = isUpPressed;
+	ImGui::Button("UP", ImVec2(32, 32));
+	touch_controls.up = ImGui::IsItemActive(); // Works for Mouse or Touch
 
-	// The rest of your buttons...
+	ImGui::NewLine();
+
+	ImGui::Button("LEFT", ImVec2(32, 32));
+	touch_controls.left = ImGui::IsItemActive();
+	ImGui::SameLine();
+	ImGui::Button("DOWN", ImVec2(32, 32));
+	touch_controls.down = ImGui::IsItemActive();
+	ImGui::SameLine();
+	ImGui::Button("RIGHT", ImVec2(32, 32));
+	touch_controls.right = ImGui::IsItemActive();
+
 	ImGui::End();
 
 	ImGui::Render();
@@ -503,9 +524,7 @@ void free_resource()
 int main(int argc, char * argv[])
 {
 	PROFILE_FUNCTION();
-	SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "1");
 	SDL_SetLogPriorities(SDL_LOG_PRIORITY_INFO);
-	SDL_SetAppMetadata("3D renderer", "1.2.0", "com.ht.3d-renderer");
 	is_running = initialize_window();
 	setup();
 
