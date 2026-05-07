@@ -22,81 +22,81 @@ int previous_frame_time = 0;
 
 namespace helper
 {
-mat4_t initializePerspectiveProjectionMatrix()
-{
-	float degress = 60.0;
-	float fov_radians = degress * (std::numbers::pi / 180.0);
-	float aspect = static_cast<float>(window_height) / window_width;
-	float znear = 0.1;
-	float zfar = 100.0;
-	return mat4_make_perspective(fov_radians, aspect, znear, zfar);
-}
-
-mat4_t initializeTransformationMatrix(mesh_t & mesh)
-{
-	auto scale_matrix = mat4_make_scale(mesh.scale.x, mesh.scale.y, mesh.scale.z);
-	auto rotation_matrix_x = mat4_make_rotation_x(mesh.rotation.x);
-	auto rotation_matrix_y = mat4_make_rotation_y(mesh.rotation.y);
-	auto rotation_matrix_z = mat4_make_rotation_z(mesh.rotation.z);
-	auto translation_matrix = mat4_make_translation(mesh.translation.x, mesh.translation.y, mesh.translation.z);
-
-	// Create a World Matrix combining scale, rotation, and translation matrices
-	// Order matters: First scale, then rotate, then translate. [T]*[R]*[S]*v
-	mat4_t world_matrix = translation_matrix * rotation_matrix_x * rotation_matrix_y * rotation_matrix_z * scale_matrix;
-	return world_matrix;
-}
-
-vec3_t getFaceNormalVector(const std::array<vec4_t, 3> & transformed_vertices)
-{
-	vec3_t vector_a = vec3_from_vec4(transformed_vertices[0]);
-	vec3_t vector_b = vec3_from_vec4(transformed_vertices[1]);
-	vec3_t vector_c = vec3_from_vec4(transformed_vertices[2]);
-
-	auto vector_ab = vector_b - vector_a;
-	auto vector_ac = vector_c - vector_a;
-	vec3_t normal = vec3_cross(vector_ab, vector_ac);
-
-	// Normalize the face normal vector - in-place update
-	vec3_normalize(&normal);
-	return normal;
-}
-
-std::array<vec4_t, 3> projectTriangle(const mat4_t & projection_matrix, const std::array<vec4_t, 3> & triangle)
-{
-	std::array<vec4_t, 3> projected_points{};
-	for(int j = 0; j < 3; j++)
+	mat4_t initializePerspectiveProjectionMatrix()
 	{
-		// Project the current point
-		projected_points[j] = mat4_mul_vec4_project(projection_matrix, triangle[j]);
-		// Scale into the view
-		projected_points[j].x *= window_width / 2.0;
-		projected_points[j].y *= window_height / 2.0;
-		// Invert the y value to account for flipped screen y coordinate
-		projected_points[j].y *= -1;
-		// Translate the projected points to the middle of the screen
-		projected_points[j].x += window_width / 2.0;
-		projected_points[j].y += window_height / 2.0;
+		float degress = 60.0;
+		float fov_radians = degress * (std::numbers::pi / 180.0);
+		float aspect = static_cast<float>(window_height) / window_width;
+		float znear = 0.1;
+		float zfar = 100.0;
+		return mat4_make_perspective(fov_radians, aspect, znear, zfar);
 	}
-	return projected_points;
-}
 
-void updateMeshTransformation(mesh_t & mesh, float deltaTime, const AnimationConfig & animConfig)
-{
-	const auto & [rotate_x, rotate_y, rotate_z] = animConfig;
-	if(rotate_x)
+	mat4_t initializeTransformationMatrix(mesh_t & mesh)
 	{
-		mesh.rotation.x += 1.0 * deltaTime;
+		auto scale_matrix = mat4_make_scale(mesh.scale.x, mesh.scale.y, mesh.scale.z);
+		auto rotation_matrix_x = mat4_make_rotation_x(mesh.rotation.x);
+		auto rotation_matrix_y = mat4_make_rotation_y(mesh.rotation.y);
+		auto rotation_matrix_z = mat4_make_rotation_z(mesh.rotation.z);
+		auto translation_matrix = mat4_make_translation(mesh.translation.x, mesh.translation.y, mesh.translation.z);
+
+		// Create a World Matrix combining scale, rotation, and translation matrices
+		// Order matters: First scale, then rotate, then translate. [T]*[R]*[S]*v
+		mat4_t world_matrix = translation_matrix * rotation_matrix_x * rotation_matrix_y * rotation_matrix_z * scale_matrix;
+		return world_matrix;
 	}
-	if(rotate_y)
+
+	vec3_t getFaceNormalVector(const std::array<vec4_t, 3> & transformed_vertices)
 	{
-		mesh.rotation.y += 1.0 * deltaTime;
+		vec3_t vector_a = vec3_from_vec4(transformed_vertices[0]);
+		vec3_t vector_b = vec3_from_vec4(transformed_vertices[1]);
+		vec3_t vector_c = vec3_from_vec4(transformed_vertices[2]);
+
+		auto vector_ab = vector_b - vector_a;
+		auto vector_ac = vector_c - vector_a;
+		vec3_t normal = vec3_cross(vector_ab, vector_ac);
+
+		// Normalize the face normal vector - in-place update
+		vec3_normalize(&normal);
+		return normal;
 	}
-	if(rotate_z)
+
+	std::array<vec4_t, 3> projectTriangle(const mat4_t & projection_matrix, const std::array<vec4_t, 3> & triangle)
 	{
-		mesh.rotation.z += 1.0 * deltaTime;
+		std::array<vec4_t, 3> projected_points{};
+		for(int j = 0; j < 3; j++)
+		{
+			// Project the current point
+			projected_points[j] = mat4_mul_vec4_project(projection_matrix, triangle[j]);
+			// Scale into the view
+			projected_points[j].x *= window_width / 2.0;
+			projected_points[j].y *= window_height / 2.0;
+			// Invert the y value to account for flipped screen y coordinate
+			projected_points[j].y *= -1;
+			// Translate the projected points to the middle of the screen
+			projected_points[j].x += window_width / 2.0;
+			projected_points[j].y += window_height / 2.0;
+		}
+		return projected_points;
 	}
-	mesh.translation.z = 6;
-}
+
+	void updateMeshTransformation(mesh_t & mesh, float deltaTime, const AnimationConfig & animConfig)
+	{
+		const auto & [rotate_x, rotate_y, rotate_z] = animConfig;
+		if(rotate_x)
+		{
+			mesh.rotation.x += 1.0 * deltaTime;
+		}
+		if(rotate_y)
+		{
+			mesh.rotation.y += 1.0 * deltaTime;
+		}
+		if(rotate_z)
+		{
+			mesh.rotation.z += 1.0 * deltaTime;
+		}
+		mesh.translation.z = 6;
+	}
 
 }
 
