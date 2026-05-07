@@ -13,13 +13,7 @@
 
 bool is_running = false;
 
-// bool rotate_x = false;
-// bool rotate_y = false;
-// bool rotate_z = false;
-
-/////////////////////////////////////////////////////////////////////////////////////
 /// Global matrices
-/////////////////////////////////////////////////////////////////////////////////////
 mat4_t projection_matrix;
 mat4_t world_matrix;
 mat4_t view_matrix;
@@ -132,8 +126,8 @@ void setup()
 	// -- Initialize frustum planes with a point and normal
 	init_frustum_planes(fov_x_radians, fov_y_radians, z_near, z_far);
 
-	load_mesh("../assets/f117.obj", "../assets/f117.png", vec3_new(1, 1, 1), vec3_new(-3, 0, 8), vec3_new(0, 0, 0));
-	load_mesh("../assets/efa.obj", "../assets/efa.png", vec3_new(1, 1, 1), vec3_new(3, 0, 8), vec3_new(0, 0, 0));
+	load_mesh("./assets/f117.obj", "./assets/f117.png", vec3_new(1, 1, 1), vec3_new(-3, 0, 8), vec3_new(0, 0, 0));
+	load_mesh("./assets/efa.obj", "./assets/efa.png", vec3_new(1, 1, 1), vec3_new(3, 0, 8), vec3_new(0, 0, 0));
 }
 
 void process_input()

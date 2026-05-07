@@ -1,0 +1,26 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "macos-debug",
+      "displayName": "macOS Debug",
+      "binaryDir": "${sourceDir}/cmake-build-macos-debug",
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "ios-debug",
+      "displayName": "iOS Debug",
+      "binaryDir": "${sourceDir}/cmake-build-ios-debug",
+      "generator": "Xcode",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_SYSTEM_NAME": "iOS",
+        "CMAKE_OSX_SYSROOT": "iphoneos",
+        "CMAKE_OSX_ARCHITECTURES": "arm64"
+      }
+    }
+  ]
+}

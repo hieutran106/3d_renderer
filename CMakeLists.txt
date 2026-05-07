@@ -108,13 +108,22 @@ endfunction()
 
 function(copy_asset target_name)
     if (IOS)
-        add_custom_command(TARGET 3d_renderer POST_BUILD
+        add_custom_command(TARGET ${target_name} POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E copy_directory
                 "${CMAKE_SOURCE_DIR}/assets"
-                "$<TARGET_BUNDLE_DIR:3d_renderer>/assets"
+                "$<TARGET_BUNDLE_DIR:${target_name}>/assets"
                 COMMENT "Copying assets folder into iOS app bundle"
         )
         message(STATUS "Copy asset")
+    elseif (APPLE AND NOT IOS)
+        # For macOS, this copies assets next to the binary
+        add_custom_command(TARGET ${target_name} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E echo "DEBUG: Running post-build copy..."
+                COMMAND ${CMAKE_COMMAND} -E copy_directory
+                "${CMAKE_SOURCE_DIR}/assets"
+                "$<TARGET_FILE_DIR:${target_name}>/assets"
+                COMMENT "Copying assets folder next to macOS executable"
+        )
     endif ()
 
 endfunction()

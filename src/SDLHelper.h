@@ -1,4 +1,5 @@
 #pragma once
+
 #include "Logger.h"
 #include <SDL3/SDL.h>
 #include <string>
@@ -6,7 +7,7 @@
 
 namespace SDLHelper
 {
-void SetRenderSizeInPixels(SDL_Window * window, int * renderW, int * renderH, float * scale)
+inline void SetRenderSizeInPixels(SDL_Window * window, int * renderW, int * renderH, float * scale)
 {
 	int windowW, windowH;
 	SDL_GetWindowSize(window, &windowW, &windowH);
@@ -18,13 +19,13 @@ void SetRenderSizeInPixels(SDL_Window * window, int * renderW, int * renderH, fl
 	SDL_LogDebug(MY_LOG_SDL, "Physical pixels: %d x %d", *renderW, *renderH);
 }
 
-bool IsIOS()
+inline bool IsIOS()
 {
 	const char * platform = SDL_GetPlatform();
 	return SDL_strcmp(platform, "iOS") == 0;
 }
 
-void LogSDLWindowFlags(SDL_Window * window)
+inline void LogSDLWindowFlags(SDL_Window * window)
 {
 	Uint64 flags = SDL_GetWindowFlags(window);
 	std::string report = "Effective Window Flags for ID " + std::to_string(SDL_GetWindowID(window)) + ":\n";
@@ -62,7 +63,7 @@ void LogSDLWindowFlags(SDL_Window * window)
 	SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "%s", report.c_str());
 }
 
-std::string GetResourcePath(const char * filename)
+inline std::string GetResourcePath(const char * filename)
 {
 	const char * base_path = SDL_GetBasePath();
 	SDL_Log("SDL_GetBasePath: %s", base_path);

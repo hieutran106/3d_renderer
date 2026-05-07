@@ -1,14 +1,13 @@
 #include "Mesh.h"
-
-#include "Logger.h"
+#include "SDLHelper.h"
 #include <SDL3/SDL.h>
 
 static std::vector<mesh_t> meshes;
 
 void load_mesh_obj_data(mesh_t & mesh, const char * filename)
 {
-	FILE * file;
-	file = fopen(filename, "r");
+	auto abs_filename = SDLHelper::GetResourcePath(filename);
+	FILE * file = fopen(abs_filename.c_str(), "r");
 	char line[1024];
 
 	std::vector<tex2_t> texcoords;
