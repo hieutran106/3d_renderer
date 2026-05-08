@@ -3,6 +3,9 @@
 #include <SDL3/SDL.h>
 #include <numbers>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 static std::vector<mesh_t> meshes;
 
 void load_mesh_obj_data(mesh_t & mesh, const char * filename)

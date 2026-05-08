@@ -1,5 +1,5 @@
 #pragma once
-#include "Mesh.h"
+// #include "Mesh.h"
 #include "Texture.h"
 #include "Vector.h"
 #include "upng.h"

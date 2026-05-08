@@ -1,4 +1,13 @@
 #pragma once
+#include <cstdint>
+
+struct png_texture_t
+{
+	int width;
+	int height;
+	int channels;
+	uint32_t * texture;
+};
 
 struct tex2_t
 {

@@ -1,19 +1,10 @@
 #pragma once
+
+#include "Texture.h"
 #include "Triangle.h"
 #include "Vector.h"
 #include "upng.h"
 #include <vector>
-
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-
-struct png_texture_t
-{
-	int width;
-	int height;
-	int channels;
-	uint32_t * texture;
-};
 
 // Define a struct for dynamic size meshes
 struct mesh_t
