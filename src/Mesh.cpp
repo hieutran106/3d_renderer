@@ -90,6 +90,17 @@ void load_mesh_png_data(mesh_t & mesh, const char * filename)
 			mesh.texture = png_image;
 		}
 	}
+	// new stbi
+	int width, height, channels;
+	// Force 4 channels (RGBA) to ensure 32-bit alignment
+	unsigned char * data = stbi_load(filename, &width, &height, &channels, 4);
+	if(data)
+	{
+		png_texture_t png_texture = {
+			.width = width, .height = height, .channels = channels, .texture = reinterpret_cast<uint32_t *>(data)
+		};
+		mesh.png_texture = png_texture;
+	}
 }
 
 void load_mesh(const char * obj_filename, const char * png_filename, vec3_t scale, vec3_t translation, vec3_t rotation)
@@ -110,6 +121,7 @@ void free_meshes_resource()
 	for(const auto & m : meshes)
 	{
 		upng_free(m.texture);
+		stbi_image_free(m.png_texture.texture);
 	}
 }
 

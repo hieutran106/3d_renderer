@@ -1,5 +1,6 @@
 #include "Triangle.h"
 #include "Display.h"
+#include "Mesh.h"
 #include "Swap.h"
 #include <algorithm>
 #include <assert.h>
@@ -7,45 +8,45 @@
 
 namespace
 {
-///////////////////////////////////////////////////////////////////////////////
-// Function to draw a solid pixel at position (x,y) using depth interpolation
-///////////////////////////////////////////////////////////////////////////////
-void draw_triangle_pixel(int x, int y, uint32_t color, vec4_t point_a, vec4_t point_b, vec4_t point_c)
-{
-	// Create three vec2 to find the interpolation
-	vec2_t p = {static_cast<float>(x), static_cast<float>(y)};
-	vec2_t a = vec2_from_vec4(point_a);
-	vec2_t b = vec2_from_vec4(point_b);
-	vec2_t c = vec2_from_vec4(point_c);
-
-	// Calculate the barycentric coordinates of our point 'p' inside the triangle
-	vec3_t weights = barycentric_weights(a, b, c, p);
-
-	float alpha = weights.x;
-	float beta = weights.y;
-	float gamma = weights.z;
-
-	// Interpolate the value of 1/w for the current pixel
-	float interpolated_reciprocal_w = (1 / point_a.w) * alpha + (1 / point_b.w) * beta + (1 / point_c.w) * gamma;
-
-	// Adjust 1/w so the pixels that are closer to the camera have smaller values
-	interpolated_reciprocal_w = 1.0 - interpolated_reciprocal_w;
-
-	// Only draw the pixel if the depth value is less than the one previously stored in the z-buffer
-	int zBufferIndex = (window_width * y) + x;
-	if(zBufferIndex >= window_width * window_height)
+	///////////////////////////////////////////////////////////////////////////////
+	// Function to draw a solid pixel at position (x,y) using depth interpolation
+	///////////////////////////////////////////////////////////////////////////////
+	void draw_triangle_pixel(int x, int y, uint32_t color, vec4_t point_a, vec4_t point_b, vec4_t point_c)
 	{
-		return;
-	}
-	if(interpolated_reciprocal_w < z_buffer[zBufferIndex])
-	{
-		// Draw a pixel at position (x,y) with a solid color
-		draw_pixel(x, y, color);
+		// Create three vec2 to find the interpolation
+		vec2_t p = {static_cast<float>(x), static_cast<float>(y)};
+		vec2_t a = vec2_from_vec4(point_a);
+		vec2_t b = vec2_from_vec4(point_b);
+		vec2_t c = vec2_from_vec4(point_c);
 
-		// Update the z-buffer value with the 1/w of this current pixel
-		z_buffer[zBufferIndex] = interpolated_reciprocal_w;
+		// Calculate the barycentric coordinates of our point 'p' inside the triangle
+		vec3_t weights = barycentric_weights(a, b, c, p);
+
+		float alpha = weights.x;
+		float beta = weights.y;
+		float gamma = weights.z;
+
+		// Interpolate the value of 1/w for the current pixel
+		float interpolated_reciprocal_w = (1 / point_a.w) * alpha + (1 / point_b.w) * beta + (1 / point_c.w) * gamma;
+
+		// Adjust 1/w so the pixels that are closer to the camera have smaller values
+		interpolated_reciprocal_w = 1.0 - interpolated_reciprocal_w;
+
+		// Only draw the pixel if the depth value is less than the one previously stored in the z-buffer
+		int zBufferIndex = (window_width * y) + x;
+		if(zBufferIndex >= window_width * window_height)
+		{
+			return;
+		}
+		if(interpolated_reciprocal_w < z_buffer[zBufferIndex])
+		{
+			// Draw a pixel at position (x,y) with a solid color
+			draw_pixel(x, y, color);
+
+			// Update the z-buffer value with the 1/w of this current pixel
+			z_buffer[zBufferIndex] = interpolated_reciprocal_w;
+		}
 	}
-}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -71,7 +72,21 @@ void draw_triangle_pixel(int x, int y, uint32_t color, vec4_t point_a, vec4_t po
 //                         (x2,y2)
 //
 ///////////////////////////////////////////////////////////////////////////////
-void draw_filled_triangle(int x0, int y0, float z0, float w0, int x1, int y1, float z1, float w1, int x2, int y2, float z2, float w2, uint32_t color)
+void draw_filled_triangle(
+	int x0,
+	int y0,
+	float z0,
+	float w0,
+	int x1,
+	int y1,
+	float z1,
+	float w1,
+	int x2,
+	int y2,
+	float z2,
+	float w2,
+	uint32_t color
+)
 {
 	// We need to sort the vertices by y-coordinate ascending (y0 < y1 < y2)
 	if(y0 > y1)
@@ -164,7 +179,17 @@ void draw_filled_triangle(int x0, int y0, float z0, float w0, int x1, int y1, fl
 	}
 }
 
-void draw_texel(int x, int y, upng_t * texture, vec4_t point_a, vec4_t point_b, vec4_t point_c, tex2_t a_uv, tex2_t b_uv, tex2_t c_uv)
+void draw_texel(
+	int x,
+	int y,
+	const png_texture_t & texture,
+	vec4_t point_a,
+	vec4_t point_b,
+	vec4_t point_c,
+	tex2_t a_uv,
+	tex2_t b_uv,
+	tex2_t c_uv
+)
 {
 	vec2_t point_p = {static_cast<float>(x), static_cast<float>(y)};
 	vec2_t a = vec2_from_vec4(point_a);
@@ -200,9 +225,9 @@ void draw_texel(int x, int y, upng_t * texture, vec4_t point_a, vec4_t point_b, 
 	// Map the UV coordinate to the full texture width and height
 	// tex_x can go out of range whenever interpolated_u is not guaranteed to stay in [0, 1)
 	// Floating-point precision + Rounding behavior
-	int texture_width = upng_get_width(texture);
-	int texture_height = upng_get_height(texture);
-	uint32_t * i32_texture = (uint32_t *)upng_get_buffer(texture);
+	int texture_width = texture.width;
+	int texture_height = texture.height;
+	uint32_t * i32_texture = texture.texture;
 	interpolated_v = 1.0 - interpolated_v;
 	int tex_x = std::clamp(static_cast<int>(interpolated_u * texture_width), 0, texture_width - 1);
 	int tex_y = std::clamp(static_cast<int>(interpolated_v * texture_height), 0, texture_height - 1);
@@ -266,7 +291,7 @@ void draw_textured_triangle(
 	float w2,
 	float u2,
 	float v2,
-	upng_t * texture
+	const png_texture_t & texture
 )
 {
 	// We need to sort the vertices by y-coordinate ascending (y0 < y1 < y2)

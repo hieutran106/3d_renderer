@@ -4,6 +4,17 @@
 #include "upng.h"
 #include <vector>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
+struct png_texture_t
+{
+	int width;
+	int height;
+	int channels;
+	uint32_t * texture;
+};
+
 // Define a struct for dynamic size meshes
 struct mesh_t
 {
@@ -13,9 +24,10 @@ struct mesh_t
 	vec3_t rotation;
 	vec3_t scale; // Scale with x,y, and z
 	vec3_t translation;
+	// stb
+	png_texture_t png_texture;
 };
 
-void load_obj_file_data(const char * filename);
 void load_mesh(const char * obj_filename, const char * png_filename, vec3_t scale, vec3_t translation, vec3_t rotation);
 
 void free_meshes_resource();

@@ -1,4 +1,5 @@
 #pragma once
+#include "Mesh.h"
 #include "Texture.h"
 #include "Vector.h"
 #include "upng.h"
@@ -21,10 +22,25 @@ struct triangle_t
 	std::array<vec4_t, 3> points;
 	std::array<tex2_t, 3> texcoords;
 	uint32_t color;
-	upng_t * texture;
+	// upng_t * texture;
+	png_texture_t png_texture;
 };
 
-void draw_filled_triangle(int x0, int y0, float z0, float w0, int x1, int y1, float z1, float w1, int x2, int y2, float z2, float w2, uint32_t color);
+void draw_filled_triangle(
+	int x0,
+	int y0,
+	float z0,
+	float w0,
+	int x1,
+	int y1,
+	float z1,
+	float w1,
+	int x2,
+	int y2,
+	float z2,
+	float w2,
+	uint32_t color
+);
 void draw_textured_triangle(
 	int x0,
 	int y0,
@@ -44,5 +60,5 @@ void draw_textured_triangle(
 	float w2,
 	float u2,
 	float v2,
-	upng_t * texture
+	const png_texture_t & texture
 );

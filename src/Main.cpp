@@ -157,8 +157,8 @@ void setup()
 	// -- Initialize frustum planes with a point and normal
 	init_frustum_planes(fov_x_radians, fov_y_radians, z_near, z_far);
 
-	load_cat_mesh();
-	// load_runway_scene();
+	//load_cat_mesh();
+	load_runway_scene();
 }
 
 void handle_keydown_event(SDL_Keycode key, float deltaTimeMs)
@@ -294,7 +294,10 @@ void process_graphics_pipeline_stages(const mesh_t & mesh, float deltaTimeMs)
 			uint32_t shading = light_apply_intensity(face.color, light_intensity_factor);
 
 			triangle_t triangle_to_render = {
-				.color = shading, .points = projected_points, .texcoords = triangle.texcoords, .texture = mesh.texture
+				.color = shading,
+				.points = projected_points,
+				.texcoords = triangle.texcoords,
+				.png_texture = mesh.png_texture
 			};
 			// Save the projected triangle in the array of triangles to render
 			if(num_triangles_to_render < MAX_TRIANGLE_PER_MESH)
@@ -392,7 +395,7 @@ void render_scene_to_buffer()
 				points[2].w,
 				texcoords[2].u,
 				texcoords[2].v,
-				triangle.texture
+				triangle.png_texture
 				// mesh_texture
 			);
 		}
