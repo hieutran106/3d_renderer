@@ -157,7 +157,8 @@ void setup()
 	// -- Initialize frustum planes with a point and normal
 	init_frustum_planes(fov_x_radians, fov_y_radians, z_near, z_far);
 
-	load_cat_mesh();
+	// load_cat_mesh();
+	load_chest_mesh();
 	// load_runway_scene();
 }
 
@@ -416,9 +417,12 @@ void render_scene_to_buffer()
 		// Draw triangle vertex points
 		if(render_method == RENDER_WIRE_VERTEX)
 		{
-			draw_rect(triangle.points[0].x - 3, triangle.points[0].y - 3, 6, 6, 0xFFFF0000); // vertex A
-			draw_rect(triangle.points[1].x - 3, triangle.points[1].y - 3, 6, 6, 0xFFFF0000); // vertex B
-			draw_rect(triangle.points[2].x - 3, triangle.points[2].y - 3, 6, 6, 0xFFFF0000); // vertex C
+			draw_rect(triangle.points[0].x - 3, triangle.points[0].y - 3, 6, 6,
+					  0xFFFF0000); // vertex A
+			draw_rect(triangle.points[1].x - 3, triangle.points[1].y - 3, 6, 6,
+					  0xFFFF0000); // vertex B
+			draw_rect(triangle.points[2].x - 3, triangle.points[2].y - 3, 6, 6,
+					  0xFFFF0000); // vertex C
 		}
 	}
 }

@@ -24,6 +24,7 @@ std::vector<mesh_t> & get_meshes();
 ///////////////////////////////////
 void load_runway_scene();
 void load_cat_mesh();
+void load_chest_mesh();
 void load_runway_mesh();
 void load_f22_mesh();
 void load_efa_mesh();

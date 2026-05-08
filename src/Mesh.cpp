@@ -138,6 +138,11 @@ void load_cat_mesh()
 	);
 }
 
+void load_chest_mesh()
+{
+	load_mesh("./assets/chest.obj", "./assets/chest.png", vec3_new(1, 1, 1), vec3_new(0, 0, +5), vec3_new(0, 0, 0));
+}
+
 void load_runway_mesh()
 {
 	load_mesh(
