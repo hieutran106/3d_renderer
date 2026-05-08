@@ -157,8 +157,8 @@ void setup()
 	// -- Initialize frustum planes with a point and normal
 	init_frustum_planes(fov_x_radians, fov_y_radians, z_near, z_far);
 
-	//load_cat_mesh();
-	load_runway_scene();
+	load_cat_mesh();
+	// load_runway_scene();
 }
 
 void handle_keydown_event(SDL_Keycode key, float deltaTimeMs)

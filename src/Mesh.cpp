@@ -84,18 +84,7 @@ void load_mesh_obj_data(mesh_t & mesh, const char * filename)
 
 void load_mesh_png_data(mesh_t & mesh, const char * filename)
 {
-	upng_t * png_image = upng_new_from_file(filename);
-	if(png_image != nullptr)
-	{
-		upng_decode(png_image);
-		if(upng_get_error(png_image) == UPNG_EOK)
-		{
-			mesh.texture = png_image;
-		}
-	}
-	// new stbi
 	int width, height, channels;
-	// Force 4 channels (RGBA) to ensure 32-bit alignment
 	unsigned char * data = stbi_load(filename, &width, &height, &channels, 4);
 	if(data)
 	{
@@ -123,7 +112,6 @@ void free_meshes_resource()
 {
 	for(const auto & m : meshes)
 	{
-		upng_free(m.texture);
 		stbi_image_free(m.png_texture.texture);
 	}
 }
@@ -143,7 +131,7 @@ void load_cat_mesh()
 {
 	load_mesh(
 		"./assets/cat.obj",
-		"./assets/f22.png",
+		"./assets/cat.png",
 		vec3_new(1, 1, 1),
 		vec3_new(0, 0, +5),
 		vec3_new(0, std::numbers::pi / 2, 0)

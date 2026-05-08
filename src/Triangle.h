@@ -1,10 +1,7 @@
 #pragma once
-// #include "Mesh.h"
 #include "Texture.h"
 #include "Vector.h"
-#include "upng.h"
 #include <array>
-#include <cstdint>
 
 struct face_t
 {
