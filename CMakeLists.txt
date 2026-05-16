@@ -3,6 +3,8 @@ project(3d_renderer LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# Enable the compilation database export
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 function(link_sdl3_xc target_name)
     #    find_library(SDL3_FRAMEWORK
