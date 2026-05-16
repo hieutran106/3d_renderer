@@ -427,10 +427,50 @@ void render_scene_to_buffer()
 	}
 }
 
+void triangle_fill_pineda(vec2_t & v0, vec2_t & v1, vec2_t & v2, uint32_t color)
+{
+	int x_min = std::min({v0.x, v1.x, v2.x});
+	int y_min = std::min({v0.y, v1.y, v2.y});
+	int x_max = std::max({v0.x, v1.x, v2.x});
+	int y_max = std::max({v0.y, v1.y, v2.y});
+
+	for(int y = y_min; y <= y_max; y++)
+	{
+		for(int x = x_min; x <= x_max; x++)
+		{
+			vec2_t p = {static_cast<float>(x), static_cast<float>(y)};
+			// TODO: if inside => draw_pixel(x, y, color)
+			if(true)
+			{
+				draw_pixel(x, y, 0xFF00FF00);
+			}
+		}
+	}
+}
+void render_pineda_rasterization()
+{
+	clear_color_buffer(0xFF000000);
+	clear_z_buffer();
+
+	std::array<vec2_t, 3> vertices = {
+		{
+         {.x = 40, .y = 40},
+         {.x = 80, .y = 40},
+         {.x = 40, .y = 80},
+		 }
+	};
+	auto & v0 = vertices[0];
+	auto & v1 = vertices[1];
+	auto & v2 = vertices[2];
+
+	triangle_fill_pineda(v0, v1, v2, 0xFF00FF00);
+}
+
 void render()
 {
 	// render_scene_to_buffer();
-	// render_color_buffer();
+	render_pineda_rasterization();
+	render_color_buffer();
 	// render_imgui();
 	SDL_RenderPresent(renderer);
 }

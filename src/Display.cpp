@@ -76,13 +76,21 @@ bool initialize_window()
 	SDL_SetRenderLogicalPresentation(renderer, window_width, window_height, SDL_LOGICAL_PRESENTATION_STRETCH);
 
 	color_buffer = new uint32_t[window_width * window_height];
-	color_buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
+	color_buffer_texture =
+		SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
 	z_buffer = new float[window_width * window_height];
 
 	if(!initialize_imgui(renderer, window))
 	{
 		return false;
 	}
+	SDL_Log(
+		"Window initialized window_width=%d, window_height=%d, renderW=%d, renderH=%d",
+		window_width,
+		window_height,
+		renderW,
+		renderH
+	);
 	return true;
 }
 
