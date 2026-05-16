@@ -455,8 +455,8 @@ void render_pineda_rasterization()
 	std::array<vec2_t, 3> vertices = {
 		{
          {.x = 40, .y = 40},
-         {.x = 80, .y = 40},
-         {.x = 40, .y = 80},
+         {.x = 160, .y = 40},
+         {.x = 40, .y = 160},
 		 }
 	};
 	auto & v0 = vertices[0];
