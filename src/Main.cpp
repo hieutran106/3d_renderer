@@ -429,10 +429,9 @@ void render_scene_to_buffer()
 
 void render()
 {
-	render_scene_to_buffer();
-	render_color_buffer();
-	// render_stats_text();
-	render_imgui();
+	// render_scene_to_buffer();
+	// render_color_buffer();
+	// render_imgui();
 	SDL_RenderPresent(renderer);
 }
 
